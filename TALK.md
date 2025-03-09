@@ -294,7 +294,13 @@ Transaction {
 
 ## Links and references
 
+Software:
 * [Aiken](https://aiken-lang.org/)
 * [Lucid](https://lucid.spacebudz.io/)
   * powered by [Pallas](https://github.com/txpipe/pallas/)
 * [Lace anatomy](https://laceanatomy.com/)
+
+Documentation:
+* [Cardano ledger](https://github.com/IntersectMBO/cardano-ledger) (the bible)
+* [Aiken's EUTxO crash course](https://aiken-lang.org/fundamentals/eutxo)
+* [Debugging plutus](https://www.joinplank.com/articles/debugging-plutus-an-introduction-to-low-level-cardano-transactions-in-the-alonzo-era)
