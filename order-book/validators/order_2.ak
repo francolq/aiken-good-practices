@@ -46,34 +46,7 @@ validator order {
         let cont_has_correct_addr = cont_addr == own_in.output.address
 
         let cont_has_correct_value = {
-          // 1. first try:
-          // and {
-          //   quantity_of(cont_value, own_hash, "val") == 1,
-          //   quantity_of(cont_value, policy_id, asset_name) >= amount,
-          // }
-          //
-          // questions:
-          // - can add/remove ADA?  YES
-          // - can add/remove val token?  NO
-          // - can leave some token A?  YES
-          // - can add more token B?   YES
-          // - can include other tokens?  YES
-
-          // a more restrictive option:
-          // - can't remove ADA
-          // - all A must be removed
-          // - exact amount of B must be added
-          //
-          // let in_lovelace = lovelace_of(own_in.output.value)
-          // let expected_value = from_lovelace(in_lovelace)
-          //   |> add(own_hash, "val", 1)
-          //   |> add(policy_id, asset_name, amount)
-          // // trace "EXPECTED": expected_value
-          // // trace "ACTUAL": cont_value
-          // match(cont_value, expected_value, >=)
-
-          // chosen option:
-          // - can't remove ADA
+          // - can't remove lovelace
           // - all A must be removed
           // - can add more B than required
           let in_lovelace = lovelace_of(own_in.output.value)
