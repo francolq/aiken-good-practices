@@ -225,7 +225,7 @@ Some options:
      * Unique policy: see 1
      * Unique token name: hash a seed UTxO
    * In datum:
-     * add 
+     * unique field: a seed UTxO
 3. Restrict inputs
    * explicit checks limiting script inputs
 
