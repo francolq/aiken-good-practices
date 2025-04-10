@@ -33,6 +33,15 @@ validator order {
         expect Some(own_in) = find_input(inputs, own_ref)
         expect Script(own_hash) = own_in.output.address.payment_credential
 
+        // exactly one order is being spent (avoids double satisfaction)
+        let tx_has_one_order_inputs =
+          list.length(
+            list.filter(
+              inputs,
+              fn(input) { input.output.address == own_in.output.address },
+            ),
+          ) == 1
+
         // assume continuation is the first output
         expect [cont_out, ..] = outputs
 
@@ -65,17 +74,12 @@ validator order {
         }
 
         and {
+          tx_has_one_order_inputs?,
           cont_has_correct_addr?,
           cont_has_correct_value?,
           cont_has_correct_datum?,
         }
       }
-
-      // questions:
-      // do we have to check something else?
-      // payment to wallets?
-      // minting?
-      // is double satisfaction attack possible?
       Close -> True
     }
   }

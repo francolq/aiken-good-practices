@@ -42,6 +42,7 @@ validator order {
             ),
           ) == 1
 
+        // assume continuation is the first output
         expect [cont_out, ..] = outputs
 
         // checks for continuation output
@@ -55,6 +56,9 @@ validator order {
         let cont_has_correct_addr = cont_addr == own_in.output.address
 
         let cont_has_correct_value = {
+          // - can't remove lovelace
+          // - all A must be removed
+          // - can add more B than required
           let in_lovelace = lovelace_of(own_in.output.value)
           and {
             lovelace_of(cont_value) >= in_lovelace,

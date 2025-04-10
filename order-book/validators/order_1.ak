@@ -32,9 +32,10 @@ validator order {
         // do we have conditions over own_in?
         // do we have to check for val token in input?
 
-        // checks for continuation output
+        // assume continuation is the first output
         expect [cont_out, ..] = outputs
 
+        // checks for continuation output
         expect Output {
           address: cont_addr,
           value: _cont_value,

@@ -1,4 +1,4 @@
-use aiken/collection/list.{length}
+use aiken/collection/list
 use aiken/crypto.{VerificationKeyHash}
 use cardano/address.{Script}
 use cardano/assets.{AssetName, PolicyId, flatten, lovelace_of, quantity_of}
@@ -33,9 +33,10 @@ validator order {
         expect Some(own_in) = find_input(inputs, own_ref)
         expect Script(own_hash) = own_in.output.address.payment_credential
 
-        // checks for continuation output
+        // assume continuation is the first output
         expect [cont_out, ..] = outputs
 
+        // checks for continuation output
         expect Output {
           address: cont_addr,
           value: cont_value,
@@ -54,7 +55,7 @@ validator order {
             lovelace_of(cont_value) >= in_lovelace,
             quantity_of(cont_value, own_hash, "val") == 1,
             quantity_of(cont_value, policy_id, asset_name) >= amount,
-            length(flatten(cont_value)) == 3,
+            list.length(flatten(cont_value)) == 3,
           }
         }
 
