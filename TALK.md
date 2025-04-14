@@ -99,9 +99,10 @@ $ deno tests/integration.ts
 Check continuation output:
 
 ```
-    // checks for continuation output
+    // assume continuation is the first output
     expect [cont_out, ..] = outputs
 
+    // checks for continuation output
     expect Output {
       address: cont_addr,
       value: cont_value,
@@ -224,12 +225,12 @@ Some options:
    * in value: make validity an NFT
      * Unique policy: see 1
      * Unique token name: hash a seed UTxO
-   * In datum:
+   * in datum:
      * unique field: a seed UTxO
 3. Restrict inputs
    * explicit checks limiting script inputs
 
-## Iteration 4 (and last!)
+## Iteration 4
 
 Restrict inputs:
 ```
@@ -244,6 +245,32 @@ Restrict inputs:
 ```
 
 [Complete code](order-book/validators/order.ak)
+
+**Problem: Not composable!!**
+
+## Composability
+
+![composability](composability.png)
+
+## Iteration 5
+
+Tagging outputs instead of restricting inputs:
+
+* New field in datum:
+```
+    tag: OutputReference,
+```
+
+* Now the continuation is not always the first output.
+  The index is provided in the redeemer:
+```
+    // continuation is the output with provided index `out_ix`
+    expect Some(cont_out) = list.at(outputs, out_ix)
+```
+
+* How to enforce unique tags?
+  * Use an output reference spent at order creation.
+  * **Must check in the minting policy!!**
 
 ## Final remarks
 
