@@ -62,7 +62,7 @@ const lucid2 = new Lucid({
 });
 
 //
-// CREATE ORDER
+// CREATE ORDER: OFFER 1234 A FOR 4242 B
 //
 const orderValidator = new OrderOrderSpend();
 const orderAddress = lucid1.newScript(orderValidator).toAddress();
@@ -75,6 +75,10 @@ const orderDatum: OrderOrderDatum = {
   amount: 4242n,
   policyId: tokenBPolicy,
   assetName:tokenBAsset,
+  tag: {
+    transactionId: '0000000000000000000000000000000000000000000000000000000000000000',
+    outputIndex: 0n,
+  },
 }
 
 const createTx = await lucid1
@@ -99,6 +103,8 @@ const createTx = await lucid1
 const signedCreateTx = await createTx.sign().commit();
 const createTxHash = await signedCreateTx.submit();
 
+// console.log("CREATE TX:", signedCreateTx.toString());
+
 emulator.awaitTx(createTxHash);
 
 //
@@ -114,7 +120,7 @@ const resolveTx = await lucid2
   .attachScript(orderValidator)
   .collectFrom(
     [order],
-    Data.to("Resolve", OrderOrderSpend.redeemer)
+    Data.to({Resolve: [0n]}, OrderOrderSpend.redeemer)
   )
   .payToContract(
     orderAddress,

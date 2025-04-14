@@ -11,10 +11,11 @@ pub type OrderDatum {
   amount: Int,
   policy_id: PolicyId,
   asset_name: AssetName,
+  tag: OutputReference,
 }
 
 pub type OrderRedeemer {
-  Resolve
+  Resolve(Int)  // int indicates the output index
   Close
 }
 
@@ -26,24 +27,15 @@ validator order {
     self: Transaction,
   ) {
     let Transaction { inputs, outputs, .. } = self
-    expect Some(OrderDatum { owner, amount, policy_id, asset_name }) = datum
+    expect Some(OrderDatum { owner, amount, policy_id, asset_name, tag }) = datum
 
     when redeemer is {
-      Resolve -> {
+      Resolve(out_ix) -> {
         expect Some(own_in) = find_input(inputs, own_ref)
         expect Script(own_hash) = own_in.output.address.payment_credential
 
-        // exactly one order is being spent (avoids double satisfaction)
-        let tx_has_one_order_inputs =
-          list.length(
-            list.filter(
-              inputs,
-              fn(input) { input.output.address == own_in.output.address },
-            ),
-          ) == 1
-
-        // assume continuation is the first output
-        expect [cont_out, ..] = outputs
+        // continuation is the output with provided index `out_ix`
+        expect Some(cont_out) = list.at(outputs, out_ix)
 
         // checks for continuation output
         expect Output {
@@ -74,7 +66,6 @@ validator order {
         }
 
         and {
-          tx_has_one_order_inputs?,
           cont_has_correct_addr?,
           cont_has_correct_value?,
           cont_has_correct_datum?,
