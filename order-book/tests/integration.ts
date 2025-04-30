@@ -7,6 +7,7 @@ import {
   Lucid
 } from "https://deno.land/x/lucid@0.20.5/mod.ts";
 import {
+  OrderOrderMint,
   OrderOrderSpend,
   OrderOrderDatum,
 } from "../plutus.ts";
@@ -88,7 +89,7 @@ const createTx = await lucid1
     {
       [validityToken]: 1n,
     },
-    Data.void()
+    Data.to({Mint: [orderDatum.tag]}, OrderOrderMint.redeemer)
   )
   .payToContract(
     orderAddress,

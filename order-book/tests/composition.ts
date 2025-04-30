@@ -7,6 +7,7 @@ import {
   Lucid
 } from "https://deno.land/x/lucid@0.20.5/mod.ts";
 import {
+  OrderOrderMint,
   OrderOrderSpend,
   OrderOrderDatum,
 } from "../plutus.ts";
@@ -88,7 +89,7 @@ const createTx = await lucid1
     {
       [validityToken]: 1n,
     },
-    Data.void()
+    Data.to({Mint: [orderDatum.tag]}, OrderOrderMint.redeemer)
   )
   .payToContract(
     orderAddress,
@@ -129,7 +130,7 @@ const createTx2 = await lucid2
     {
       [validityToken]: 1n,
     },
-    Data.void()
+    Data.to({Mint: [orderDatum2.tag]}, OrderOrderMint.redeemer)
   )
   .payToContract(
     orderAddress,
@@ -219,7 +220,7 @@ const closeTx1 = await lucid1
     {
       [validityToken]: -1n,
     },
-    Data.void()
+    Data.to("Burn", OrderOrderMint.redeemer)
   )
   // following: https://github.com/spacebudz/lucid/blob/cb3435ba65e0131b464769851f1e1c024564d155/src/lucid/tx.ts#L229
   .addSigner("{{own.payment}}")
@@ -252,7 +253,7 @@ const closeTx2 = await lucid2
     {
       [validityToken]: -1n,
     },
-    Data.void()
+    Data.to("Burn", OrderOrderMint.redeemer)
   )
   // following: https://github.com/spacebudz/lucid/blob/cb3435ba65e0131b464769851f1e1c024564d155/src/lucid/tx.ts#L229
   .addSigner("{{own.payment}}")
