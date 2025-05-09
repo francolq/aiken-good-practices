@@ -11,11 +11,14 @@ pub type OrderDatum {
   amount: Int,
   policy_id: PolicyId,
   asset_name: AssetName,
-  tag: OutputReference,
+  tag: Option<OutputReference>,
 }
 
+// to avoid double satisfaction
+
 pub type OrderRedeemer {
-  Resolve(Int)  // int indicates the output index
+  Resolve(Int)
+  // int indicates the output index
   Close
 }
 
@@ -27,7 +30,8 @@ validator order {
     self: Transaction,
   ) {
     let Transaction { inputs, outputs, .. } = self
-    expect Some(OrderDatum { owner, amount, policy_id, asset_name, tag }) = datum
+    expect Some(datum) = datum
+    let OrderDatum { amount, policy_id, asset_name, .. } = datum
 
     when redeemer is {
       Resolve(out_ix) -> {
@@ -62,7 +66,8 @@ validator order {
 
         let cont_has_correct_datum = {
           expect cont_datum: OrderDatum = cont_datum
-          Some(cont_datum) == datum
+          let expected_datum = OrderDatum { ..datum, tag: Some(own_ref) }
+          cont_datum == expected_datum
         }
 
         and {
