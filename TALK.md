@@ -258,7 +258,7 @@ Tagging outputs instead of restricting inputs:
 
 * New field in datum:
 ```
-    tag: OutputReference,
+    tag: Some<OutputReference>,
 ```
 
 * Now the continuation is not always the first output.
@@ -269,8 +269,19 @@ Tagging outputs instead of restricting inputs:
 ```
 
 * How to enforce unique tags?
-  * Use an output reference spent at order creation.
-  * **Must check in the minting policy!!**
+  * Option 1:
+    * Use an output reference spent at order creation
+    * The tag is fixed in the entire order lifetime
+    * Base case: must check tag in the minting policy
+  * Option 2:
+    * Use the own output reference being spent
+    * The tag is updated on each operation
+    * Base case: start with tag None
+    * Spend: we use updating to build the expected datum:
+        ```
+        // avoid double satisfaction: tag must be own_ref
+        let expected_datum = OrderDatum { ..datum, tag: Some(own_ref) }
+        ```
 
 ## Final remarks
 
