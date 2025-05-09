@@ -162,6 +162,27 @@ const [order2] = await lucid2.utxosByOutRef([{
   outputIndex: 0,
 }]);
 
+const resolveOrderDatum: OrderOrderDatum = {
+  owner: payment.hash,
+  amount: 4242n,
+  policyId: tokenBPolicy,
+  assetName: tokenBAsset,
+  tag: {
+    transactionId: createTxHash,
+    outputIndex: 0n,
+  },
+}
+const resolveOrderDatum2: OrderOrderDatum = {
+  owner: payment2.hash,
+  amount: 1234n,
+  policyId: tokenAPolicy,
+  assetName: tokenAAsset,
+  tag: {
+    transactionId: createTxHash2,
+    outputIndex: 0n,
+  },
+}
+
 const resolveTx = await lucid2
   .newTx()
   .attachScript(orderValidator)
@@ -175,7 +196,7 @@ const resolveTx = await lucid2
   )
   .payToContract(
     orderAddress,
-    { Inline: Data.to(orderDatum, OrderOrderSpend.datum) },
+    { Inline: Data.to(resolveOrderDatum, OrderOrderSpend.datum) },
     {
       [validityToken]: 1n,
       [tokenB]: 4242n,
@@ -183,7 +204,7 @@ const resolveTx = await lucid2
   )
   .payToContract(
     orderAddress,
-    { Inline: Data.to(orderDatum2, OrderOrderSpend.datum) },
+    { Inline: Data.to(resolveOrderDatum2, OrderOrderSpend.datum) },
     {
       [validityToken]: 1n,
       [tokenA]: 1234n,
