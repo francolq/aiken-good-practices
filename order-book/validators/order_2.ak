@@ -26,7 +26,8 @@ validator order {
     self: Transaction,
   ) {
     let Transaction { inputs, outputs, .. } = self
-    expect Some(OrderDatum { owner, amount, policy_id, asset_name }) = datum
+    expect Some(datum) = datum
+    let OrderDatum { amount, policy_id, asset_name, .. } = datum
 
     when redeemer is {
       Resolve -> {

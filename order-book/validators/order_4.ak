@@ -26,7 +26,8 @@ validator order {
     self: Transaction,
   ) {
     let Transaction { inputs, outputs, .. } = self
-    expect Some(OrderDatum { owner, amount, policy_id, asset_name }) = datum
+    expect Some(datum) = datum
+    let OrderDatum { amount, policy_id, asset_name, .. } = datum
 
     when redeemer is {
       Resolve -> {
@@ -70,7 +71,7 @@ validator order {
 
         let cont_has_correct_datum = {
           expect cont_datum: OrderDatum = cont_datum
-          Some(cont_datum) == datum
+          cont_datum == datum
         }
 
         and {
