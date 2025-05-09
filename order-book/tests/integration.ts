@@ -104,6 +104,7 @@ const signedCreateTx = await createTx.sign().commit();
 const createTxHash = await signedCreateTx.submit();
 
 // console.log("CREATE TX:", signedCreateTx.toString());
+console.log("CREATE ORDER TX HASH:", createTxHash);
 
 emulator.awaitTx(createTxHash);
 
@@ -146,4 +147,5 @@ const resolveTx = await lucid2
 const signedResolveTx = await resolveTx.sign().commit();
 const resolveTxHash = await signedResolveTx.submit();
 
-console.log("RESOLVE TX:", signedResolveTx.toString());
+// console.log("RESOLVE TX:", signedResolveTx.toString());
+console.log("RESOLVE TX HASH:", resolveTxHash);

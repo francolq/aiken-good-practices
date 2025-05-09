@@ -7,6 +7,7 @@ import {
   Lucid
 } from "https://deno.land/x/lucid@0.20.5/mod.ts";
 import {
+  OrderOrderMint,
   OrderOrderSpend,
   OrderOrderDatum,
 } from "../plutus.ts";
@@ -88,7 +89,8 @@ const createTx = await lucid1
     {
       [validityToken]: 1n,
     },
-    Data.void()
+    Data.to({Mint: [orderDatum.tag]}, OrderOrderMint.redeemer)
+    // Data.void()
   )
   .payToContract(
     orderAddress,
@@ -104,7 +106,6 @@ const signedCreateTx = await createTx.sign().commit();
 const createTxHash = await signedCreateTx.submit();
 
 // console.log("CREATE TX:", signedCreateTx.toString());
-console.log("CREATE ORDER 1 TX HASH:", createTxHash);
 
 emulator.awaitTx(createTxHash);
 
@@ -130,7 +131,8 @@ const createTx2 = await lucid2
     {
       [validityToken]: 1n,
     },
-    Data.void()
+    Data.to({Mint: [orderDatum2.tag]}, OrderOrderMint.redeemer)
+    // Data.void()
   )
   .payToContract(
     orderAddress,
@@ -146,7 +148,6 @@ const signedCreateTx2 = await createTx2.sign().commit();
 const createTxHash2 = await signedCreateTx2.submit();
 
 // console.log("CREATE TX:", signedCreateTx2.toString());
-console.log("CREATE ORDER 2 TX HASH:", createTxHash2);
 
 emulator.awaitTx(createTxHash2);
 
@@ -164,27 +165,6 @@ const [order2] = await lucid2.utxosByOutRef([{
   outputIndex: 0,
 }]);
 
-const resolveOrderDatum: OrderOrderDatum = {
-  owner: payment.hash,
-  amount: 4242n,
-  policyId: tokenBPolicy,
-  assetName: tokenBAsset,
-  tag: {
-    transactionId: createTxHash,
-    outputIndex: 0n,
-  },
-}
-const resolveOrderDatum2: OrderOrderDatum = {
-  owner: payment2.hash,
-  amount: 1234n,
-  policyId: tokenAPolicy,
-  assetName: tokenAAsset,
-  tag: {
-    transactionId: createTxHash2,
-    outputIndex: 0n,
-  },
-}
-
 const resolveTx = await lucid2
   .newTx()
   .attachScript(orderValidator)
@@ -198,7 +178,7 @@ const resolveTx = await lucid2
   )
   .payToContract(
     orderAddress,
-    { Inline: Data.to(resolveOrderDatum, OrderOrderSpend.datum) },
+    { Inline: Data.to(orderDatum, OrderOrderSpend.datum) },
     {
       [validityToken]: 1n,
       [tokenB]: 4242n,
@@ -206,7 +186,7 @@ const resolveTx = await lucid2
   )
   .payToContract(
     orderAddress,
-    { Inline: Data.to(resolveOrderDatum2, OrderOrderSpend.datum) },
+    { Inline: Data.to(orderDatum2, OrderOrderSpend.datum) },
     {
       [validityToken]: 1n,
       [tokenA]: 1234n,
@@ -242,7 +222,8 @@ const closeTx1 = await lucid1
     {
       [validityToken]: -1n,
     },
-    Data.void()
+    Data.to("Burn", OrderOrderMint.redeemer)
+    // Data.void()
   )
   // following: https://github.com/spacebudz/lucid/blob/cb3435ba65e0131b464769851f1e1c024564d155/src/lucid/tx.ts#L229
   .addSigner("{{own.payment}}")
@@ -252,7 +233,6 @@ const signedCloseTx1 = await closeTx1.sign().commit();
 const signedCloseHash1 = await signedCloseTx1.submit();
 
 // console.log("CLOSE TX:", signedCloseTx1.toString());
-console.log("CLOSE 1 TX HASH:", signedCloseHash1);
 
 emulator.awaitTx(signedCloseHash1);
 
@@ -276,7 +256,8 @@ const closeTx2 = await lucid2
     {
       [validityToken]: -1n,
     },
-    Data.void()
+    Data.to("Burn", OrderOrderMint.redeemer)
+    // Data.void()
   )
   // following: https://github.com/spacebudz/lucid/blob/cb3435ba65e0131b464769851f1e1c024564d155/src/lucid/tx.ts#L229
   .addSigner("{{own.payment}}")
@@ -286,6 +267,3 @@ const signedCloseTx2 = await closeTx2.sign().commit();
 const signedCloseHash2 = await signedCloseTx2.submit();
 
 emulator.awaitTx(signedCloseHash2);
-
-// console.log("CLOSE TX:", signedCloseTx2.toString());
-console.log("CLOSE 2 TX HASH:", signedCloseHash2);
