@@ -31,7 +31,7 @@ validator order {
         // questions:
         // do we have conditions over own_in?
         // do we have to check for val token in input?
-
+        //
         // assume continuation is the first output
         expect [cont_out, ..] = outputs
 
