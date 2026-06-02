@@ -1,5 +1,5 @@
-use aiken/collection/list
 use aiken/collection/dict
+use aiken/collection/list
 use aiken/crypto.{VerificationKeyHash}
 use cardano/address.{Script}
 use cardano/assets.{AssetName, PolicyId, flatten, lovelace_of, quantity_of}
@@ -12,7 +12,7 @@ pub type OrderDatum {
   amount: Int,
   policy_id: PolicyId,
   asset_name: AssetName,
-  tag: OutputReference,
+  tag: Option<OutputReference>,  // to avoid double satisfaction
 }
 
 pub type SpendRedeemer {
@@ -21,7 +21,7 @@ pub type SpendRedeemer {
 }
 
 pub type MintRedeemer {
-  Mint(OutputReference)
+  Mint
   Burn
 }
 
@@ -33,7 +33,8 @@ validator order {
     self: Transaction,
   ) {
     let Transaction { inputs, outputs, extra_signatories, mint, .. } = self
-    expect Some(OrderDatum { owner, amount, policy_id, asset_name, tag }) = datum
+    expect Some(datum) = datum
+    let OrderDatum { owner, amount, policy_id, asset_name, .. } = datum
 
     expect Some(own_in) = find_input(inputs, own_ref)
     expect Script(own_hash) = own_in.output.address.payment_credential
@@ -68,7 +69,9 @@ validator order {
 
         let cont_has_correct_datum = {
           expect cont_datum: OrderDatum = cont_datum
-          Some(cont_datum) == datum
+          // avoid double satisfaction: tag must be own_ref
+          let expected_datum = OrderDatum { ..datum, tag: Some(own_ref) }
+          cont_datum == expected_datum
         }
 
         and {
@@ -97,7 +100,7 @@ validator order {
   }
 
   mint(redeemer: MintRedeemer, policy_id: PolicyId, self: Transaction) {
-    let Transaction { inputs, outputs, mint, .. } = self
+    let Transaction { outputs, mint, .. } = self
 
     expect [Pair("val", quantity)] =
       mint
@@ -105,15 +108,11 @@ validator order {
         |> dict.to_pairs()
 
     when redeemer is {
-      Mint(utxo_ref) -> {
+      Mint -> {
         // XXX: does not support creating multiple orders
         // - should allow minting n tokens
         // - should iterate over n order outputs
         // - to be unique, the tag should include the output index
-
-        // check that the given utxo_ref is consumed
-        let is_utxo_consumed =
-          list.any(inputs, fn(input) { input.output_reference == utxo_ref })
 
         // assume order output is the first output
         expect [order_out, ..] = outputs
@@ -127,32 +126,31 @@ validator order {
         } = order_out
 
         // check for address: staking key is chosen by owner
-        let order_has_correct_addr = order_addr.payment_credential == Script(policy_id)
+        let order_has_correct_addr =
+          order_addr.payment_credential == Script(policy_id)
 
         // check for value: minted token goes in this output
         // XXX: more checks here?
-        let order_has_correct_value = quantity_of(order_value, policy_id, "val") == 1
+        let order_has_correct_value =
+          quantity_of(order_value, policy_id, "val") == 1
 
         // check for datum: must have has correct unicity tag
         // (to avoid double satisfaction in spend)
         let order_has_correct_datum = {
           expect order_datum: OrderDatum = order_datum
-          order_datum.tag == utxo_ref
+          order_datum.tag == None
         }
 
         and {
           // only one "val" token can be minted,
           // so only one order can be created
           quantity == 1,
-          is_utxo_consumed,
           order_has_correct_addr,
           order_has_correct_value,
           order_has_correct_datum,
         }
       }
-      Burn -> {
-        quantity < 0
-      }
+      Burn -> quantity < 0
     }
   }
 
