@@ -1,0 +1,28 @@
+name = "Properties"
+version = "0.1.0"
+defaultTargets = ["Properties", "properties"]
+
+moreLeanArgs = ["--threads=4"]
+moreGlobalServerArgs = ["--threads=4"]
+
+[[require]]
+name = "PlutusCore"
+git = "https://github.com/input-output-hk/PlutusCoreBlaster"
+rev = "main"
+
+[[require]]
+name = "CardanoLedgerApi"
+git = "https://github.com/input-output-hk/CardanoLedgerApiBlaster"
+rev = "main"
+
+[[require]]
+name = "Blaster"
+git = "https://github.com/input-output-hk/Lean-blaster"
+rev = "main"
+
+[[lean_lib]]
+name = "Properties"
+
+[[lean_exe]]
+name = "properties"
+root = "Main"

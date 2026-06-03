@@ -4,3 +4,7 @@ artifacts/
 build/
 # Aiken's default documentation export
 docs/
+# Lean build cache
+/verify/.lake
+# Generated UPLC flat files
+/verify/Scripts/*.flat

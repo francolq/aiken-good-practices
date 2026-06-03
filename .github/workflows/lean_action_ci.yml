@@ -1,0 +1,38 @@
+name: Lean Action CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Z3
+        run: |
+          Z3_VERSION=4.15.2
+          Z3_DIR=z3-${Z3_VERSION}-x64-glibc-2.39
+          curl -L -o z3.zip "https://github.com/Z3Prover/z3/releases/download/z3-${Z3_VERSION}/${Z3_DIR}.zip"
+          unzip -q z3.zip -d /tmp/z3
+          sudo cp /tmp/z3/${Z3_DIR}/bin/z3 /usr/local/bin/z3
+          z3 --version
+
+      - name: Install Aiken via aikup
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          curl --proto '=https' --tlsv1.2 -LsSf https://install.aiken-lang.org | sh
+          echo "$HOME/.aiken/bin" >> "$GITHUB_PATH"
+          "$HOME/.aiken/bin/aikup" install v1.1.21
+
+      - name: Generate flat-encoded UPLC for the Lean proofs
+        working-directory: order-book
+        run: make flats
+
+      - uses: leanprover/lean-action@v1
+        with:
+          lake-package-directory: order-book/verify
