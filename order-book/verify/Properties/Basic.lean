@@ -1,7 +1,6 @@
 import Properties.Order.Complete.Validator
 import Properties.Order.Complete.MintValidator
 import Properties.Order.Complete.Soundness
-import Properties.Order.Complete.Robustness
 import Properties.Order.Complete.DoubleSatisfaction
 import Properties.Order.Vulnerable.Validator
 import Properties.Order.Vulnerable.Soundness
