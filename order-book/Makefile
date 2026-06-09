@@ -16,17 +16,18 @@ flats: build
 	@mkdir -p verify/Scripts
 	@invalidate_lean() { \
 	  flat="$$1"; \
-	  for lean in $$(grep -lF "Scripts/$$flat" verify/Properties/*.lean 2>/dev/null); do \
-	    mod=$$(basename "$$lean" .lean); \
-	    echo "    invalidate Lake cache for Properties/$$mod (depends on $$flat)"; \
-	    rm -f verify/.lake/build/lib/lean/Properties/$$mod.olean \
-	          verify/.lake/build/lib/lean/Properties/$$mod.olean.hash \
-	          verify/.lake/build/lib/lean/Properties/$$mod.ilean \
-	          verify/.lake/build/lib/lean/Properties/$$mod.ilean.hash \
-	          verify/.lake/build/lib/lean/Properties/$$mod.trace \
-	          verify/.lake/build/ir/Properties/$$mod.c \
-	          verify/.lake/build/ir/Properties/$$mod.c.hash \
-	          verify/.lake/build/ir/Properties/$$mod.setup.json; \
+	  for lean in $$(find verify/Properties -name '*.lean' -exec grep -lF "Scripts/$$flat" {} +); do \
+	    rel=$${lean#verify/}; \
+	    mod=$${rel%.lean}; \
+	    echo "    invalidate Lake cache for $$mod (depends on $$flat)"; \
+	    rm -f verify/.lake/build/lib/lean/$$mod.olean \
+	          verify/.lake/build/lib/lean/$$mod.olean.hash \
+	          verify/.lake/build/lib/lean/$$mod.ilean \
+	          verify/.lake/build/lib/lean/$$mod.ilean.hash \
+	          verify/.lake/build/lib/lean/$$mod.trace \
+	          verify/.lake/build/ir/$$mod.c \
+	          verify/.lake/build/ir/$$mod.c.hash \
+	          verify/.lake/build/ir/$$mod.setup.json; \
 	  done; \
 	}; \
 	encode_flat() { \
