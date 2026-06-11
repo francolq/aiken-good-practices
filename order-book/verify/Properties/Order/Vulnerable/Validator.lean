@@ -37,7 +37,7 @@ theorem resolve_complete :
                              input.datum.policyId input.datum.assetName cont.assetAmount →
       validResolve ownHash input cont →
       orderVulnerableAcceptsProp
-        (resolveCtx ownHash input cont
+        (resolveCtx ownHash input cont (.Resolve 0)
                     fee validRange txId treasuryAmount treasuryDonation)
     := by blaster
 

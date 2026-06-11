@@ -76,11 +76,13 @@ structure ResolveContinuation where
   valQty      : Int
   assetAmount : Int
 
-/-- `ScriptContext` for a `Resolve 0` transaction. Shared across
-    complete and vulnerable validators; only the on-chain check differs. -/
+/-- `ScriptContext` for a `Resolve`-style transaction, parametric in
+    the spend redeemer `r`. Completeness theorems instantiate
+    `r := .Resolve 0`; soundness theorems quantify over `r`. -/
 def resolveCtx
     (ownHash : ByteString)
     (input : ResolveInput) (cont : ResolveContinuation)
+    (r : RedeemerKind)
     (fee : Int) (validRange : Data) (txId : ByteString)
     (treasuryAmount treasuryDonation : Data) : ScriptContext :=
   let ownAddr := scriptAddr ownHash
@@ -103,7 +105,7 @@ def resolveCtx
         txInfoValidRange := validRange
         txInfoSignatories := []
         txInfoRedeemers :=
-          [(ScriptPurpose.Spending input.ref, redeemerKindData (.Resolve 0))]
+          [(ScriptPurpose.Spending input.ref, redeemerKindData r)]
         txInfoData := []
         txInfoId := txId
         txInfoVotes := []
@@ -111,7 +113,7 @@ def resolveCtx
         txInfoCurrentTreasuryAmount := treasuryAmount
         txInfoTreasuryDonation := treasuryDonation
       }
-    scriptContextRedeemer := redeemerKindData (.Resolve 0)
+    scriptContextRedeemer := redeemerKindData r
     scriptContextScriptInfo :=
       .SpendingScript input.ref (some (orderDatumData input.datum))
   }

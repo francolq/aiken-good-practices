@@ -16,7 +16,7 @@ open PlutusCore.ByteString (ByteString)
 open PlutusCore.Data (Data)
 open PlutusCore.UPLC.Term (Const Program)
 open PlutusCore.UPLC.CekMachine (cekExecuteProgram)
-open Properties.Order.Common (CloseInput CloseMint ResolveInput ResolveContinuation
+open Properties.Order.Common (CloseInput CloseMint RedeemerKind ResolveInput ResolveContinuation
                               scriptAddr wellFormedResolveValue
                               orderDatumData redeemerKindData resolveCtx)
 open Properties.Order.Complete.Spec
@@ -31,13 +31,12 @@ def orderAcceptsProp (ctx : ScriptContext) : Prop :=
   cekExecuteProgram orderValidator [toTerm ctx] 5000000
     = .Halt (.VCon Const.Unit)
 
-/-- `ScriptContext` for a `Close` transaction. `mintRedeemer` is the
-    opaque redeemer of the burn under `mint.policy`; the on-chain check
-    does not inspect it. -/
+/-- `ScriptContext` for a `Close`-style transaction. -/
 def closeCtx
     (ownHash : ByteString)
     (input : CloseInput) (signer : ByteString)
     (mint : CloseMint) (mintRedeemer : Data)
+    (r : RedeemerKind)
     (fee : Int) (validRange : Data) (txId : ByteString)
     (treasuryAmount treasuryDonation : Data) : ScriptContext :=
   let ownAddr := scriptAddr ownHash
@@ -55,7 +54,7 @@ def closeCtx
         txInfoValidRange := validRange
         txInfoSignatories := [signer]
         txInfoRedeemers :=
-          [(ScriptPurpose.Spending input.ref, redeemerKindData .Close),
+          [(ScriptPurpose.Spending input.ref, redeemerKindData r),
            (ScriptPurpose.Minting mint.policy, mintRedeemer)]
         txInfoData := []
         txInfoId := txId
@@ -64,7 +63,7 @@ def closeCtx
         txInfoCurrentTreasuryAmount := treasuryAmount
         txInfoTreasuryDonation := treasuryDonation
       }
-    scriptContextRedeemer := redeemerKindData .Close
+    scriptContextRedeemer := redeemerKindData r
     scriptContextScriptInfo :=
       .SpendingScript input.ref (some (orderDatumData input.datum))
   }
@@ -78,7 +77,7 @@ theorem resolve_complete :
                              input.datum.policyId input.datum.assetName cont.assetAmount →
       validResolve ownHash input cont →
       orderAcceptsProp
-        (resolveCtx ownHash input cont
+        (resolveCtx ownHash input cont (.Resolve 0)
                     fee validRange txId treasuryAmount treasuryDonation)
     := by blaster
 
@@ -90,7 +89,7 @@ theorem close_complete :
       (treasuryAmount treasuryDonation : Data),
       validClose ownHash input signer mint →
       orderAcceptsProp
-        (closeCtx ownHash input signer mint mintRedeemer
+        (closeCtx ownHash input signer mint mintRedeemer .Close
                   fee validRange txId treasuryAmount treasuryDonation)
     := by blaster
 

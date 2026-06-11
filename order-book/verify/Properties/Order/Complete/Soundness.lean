@@ -17,7 +17,7 @@ open PlutusCore.ByteString (ByteString)
 open PlutusCore.Data (Data)
 open CardanoLedgerApi.V3 (Address Credential TxOutRef)
 open Properties.Order.Common (CloseInput CloseMint MintAction MintOutput
-                              ResolveInput ResolveContinuation
+                              RedeemerKind ResolveInput ResolveContinuation
                               wellFormedResolveValue resolveCtx)
 open Properties.Order.Complete.Spec
 open Properties.Order.Complete.Validator (closeCtx orderAcceptsProp)
@@ -28,12 +28,13 @@ set_option warn.sorry false
 /-- Soundness of the `Resolve` branch. -/
 theorem resolve_sound :
     ∀ (ownHash : ByteString) (input : ResolveInput) (cont : ResolveContinuation)
+      (r : RedeemerKind)
       (fee : Int) (validRange : Data) (txId : ByteString)
       (treasuryAmount treasuryDonation : Data),
       wellFormedResolveValue cont.lovelace ownHash cont.valQty
                              input.datum.policyId input.datum.assetName cont.assetAmount →
       orderAcceptsProp
-        (resolveCtx ownHash input cont
+        (resolveCtx ownHash input cont r
                     fee validRange txId treasuryAmount treasuryDonation) →
       validResolve ownHash input cont
     := by blaster
@@ -42,10 +43,11 @@ theorem resolve_sound :
 theorem close_sound :
     ∀ (ownHash : ByteString) (input : CloseInput) (signer : ByteString)
       (mint : CloseMint) (mintRedeemer : Data)
+      (r : RedeemerKind)
       (fee : Int) (validRange : Data) (txId : ByteString)
       (treasuryAmount treasuryDonation : Data),
       orderAcceptsProp
-        (closeCtx ownHash input signer mint mintRedeemer
+        (closeCtx ownHash input signer mint mintRedeemer r
                   fee validRange txId treasuryAmount treasuryDonation) →
       validClose ownHash input signer mint
     := by blaster
