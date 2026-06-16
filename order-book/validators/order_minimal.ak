@@ -2,6 +2,13 @@
 //// output at the chosen index pays at least `amount` of the requested
 //// asset (anywhere — owner, script, third party). No address, datum
 //// or lovelace checks. `Close` only checks the owner's signature.
+////
+//// Vulnerable in multiple ways:
+//// - The output paying `amount` may sit at any address, so the
+////   resolver can pay themselves and walk away with the locked value.
+//// - Double satisfaction. N script inputs can share a single `out_ix`,
+////   satisfying every branch with a single payment.
+//// - Any UTxO at the script address is treated as a legitimate order.
 
 use aiken/collection/list
 use aiken/crypto.{VerificationKeyHash}
