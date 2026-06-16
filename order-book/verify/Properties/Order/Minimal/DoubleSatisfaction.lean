@@ -11,20 +11,19 @@ namespace Properties.Order.Minimal.DoubleSatisfaction
 
 open PlutusCore.ByteString (ByteString)
 open PlutusCore.Data (Data)
-open CardanoLedgerApi.V3 (Address ScriptContext ScriptPurpose TxOut TxOutRef
-                          lovelaceValue)
-open Properties.Order.Common (RedeemerKind redeemerKindData scriptAddr)
+open CardanoLedgerApi.V3 (Address ScriptContext ScriptPurpose TxOut TxOutRef)
+open Properties.Order.Common (InputValue RedeemerKind redeemerKindData scriptAddr inputValueToValue)
 open Properties.Order.Minimal.Spec
 open Properties.Order.Minimal.Validator (orderMinimalAcceptsProp)
 
 set_option warn.sorry false
 
 structure DSInputs where
-  datum     : Datum
-  ref1      : TxOutRef
-  ref2      : TxOutRef
-  lovelace1 : Int
-  lovelace2 : Int
+  datum  : Datum
+  ref1   : TxOutRef
+  ref2   : TxOutRef
+  value1 : InputValue
+  value2 : InputValue
 
 structure DSContinuation where
   datum       : Datum
@@ -40,9 +39,9 @@ def doubleInputCtx
   let ownAddr := scriptAddr ownHash
   let inDatumD := datumData inputs.datum
   let in1 : TxOut :=
-    ⟨ownAddr, lovelaceValue inputs.lovelace1, .OutputDatum inDatumD, none⟩
+    ⟨ownAddr, inputValueToValue inputs.value1, .OutputDatum inDatumD, none⟩
   let in2 : TxOut :=
-    ⟨ownAddr, lovelaceValue inputs.lovelace2, .OutputDatum inDatumD, none⟩
+    ⟨ownAddr, inputValueToValue inputs.value2, .OutputDatum inDatumD, none⟩
   let contValue :=
     twoEntryValue cont.lovelace
                   inputs.datum.policyId inputs.datum.assetName cont.assetAmount
@@ -76,12 +75,13 @@ def doubleInputCtx
 def noDoubleSatisfaction (acceptsProp : ScriptContext → Prop) : Prop :=
   ∀ (ownHash : ByteString) (inDatum contDatum : Datum)
     (ref1 ref2 : TxOutRef)
-    (lovelace1 lovelace2 contLovelace contAssetAmount : Int)
+    (value1 value2 : InputValue)
+    (contLovelace contAssetAmount : Int)
     (redeemer : RedeemerKind)
     (fee : Int) (validRange : Data) (txId : ByteString)
     (treasuryAmount treasuryDonation : Data),
     ref1 ≠ ref2 →
-    let inputs : DSInputs := ⟨inDatum, ref1, ref2, lovelace1, lovelace2⟩
+    let inputs : DSInputs := ⟨inDatum, ref1, ref2, value1, value2⟩
     let cont   : DSContinuation := ⟨contDatum, contLovelace, contAssetAmount⟩
     ¬ (acceptsProp
           (doubleInputCtx ownHash inputs cont ref1 redeemer

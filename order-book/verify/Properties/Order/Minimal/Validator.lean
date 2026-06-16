@@ -11,12 +11,12 @@ namespace Properties.Order.Minimal.Validator
 
 open CardanoLedgerApi.IsData.Class (toTerm)
 open CardanoLedgerApi.V3 (Address OutputDatum ScriptContext ScriptPurpose TxInInfo TxOut
-                          TxOutRef lovelaceValue)
+                          TxOutRef)
 open PlutusCore.ByteString (ByteString)
 open PlutusCore.Data (Data)
 open PlutusCore.UPLC.Term (Const Program)
 open PlutusCore.UPLC.CekMachine (cekExecuteProgram)
-open Properties.Order.Common (RedeemerKind scriptAddr redeemerKindData)
+open Properties.Order.Common (RedeemerKind scriptAddr redeemerKindData inputValueToValue)
 open Properties.Order.Minimal.Spec
 
 set_option warn.sorry false
@@ -39,7 +39,7 @@ def resolveCtx
     (treasuryAmount treasuryDonation : Data) : ScriptContext :=
   let ownAddr := scriptAddr ownHash
   let inResolved : TxOut :=
-    ⟨ownAddr, lovelaceValue input.lovelace,
+    ⟨ownAddr, inputValueToValue input.value,
      .OutputDatum (datumData input.datum), none⟩
   let contValue :=
     twoEntryValue cont.lovelace
@@ -80,7 +80,7 @@ def closeCtx
     (treasuryAmount treasuryDonation : Data) : ScriptContext :=
   let ownAddr := scriptAddr ownHash
   let inResolved : TxOut :=
-    ⟨ownAddr, lovelaceValue 0,
+    ⟨ownAddr, inputValueToValue input.value,
      .OutputDatum (datumData input.datum), none⟩
   { scriptContextTxInfo :=
       { txInfoInputs := [⟨input.ref, inResolved⟩]

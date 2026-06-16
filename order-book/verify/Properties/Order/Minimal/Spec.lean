@@ -12,7 +12,7 @@ namespace Properties.Order.Minimal.Spec
 open PlutusCore.ByteString (ByteString)
 open PlutusCore.Data (Data)
 open CardanoLedgerApi.V3 (Address TxOutRef Value)
-open Properties.Order.Common (scriptAddr)
+open Properties.Order.Common (InputValue scriptAddr)
 
 structure Datum where
   owner     : ByteString
@@ -37,9 +37,9 @@ def wellFormedResolveValue
     (twoEntryValue lovelace policyId assetName assetAmount) = true
 
 structure ResolveInput where
-  ref      : TxOutRef
-  datum    : Datum
-  lovelace : Int
+  ref   : TxOutRef
+  datum : Datum
+  value : InputValue
 
 structure ResolveContinuation where
   address     : Address
@@ -50,6 +50,7 @@ structure ResolveContinuation where
 structure CloseInput where
   ref   : TxOutRef
   datum : Datum
+  value : InputValue
 
 /-- Resolve spec: some output pays at least `amount` of the requested
     asset. No address or datum constraint. -/

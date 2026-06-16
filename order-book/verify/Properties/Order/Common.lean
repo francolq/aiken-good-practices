@@ -9,7 +9,7 @@ open PlutusCore.ByteString (ByteString)
 open PlutusCore.Data (Data)
 open CardanoLedgerApi.IsData.Class (IsData)
 open CardanoLedgerApi.V3 (Address Credential OutputDatum ScriptContext ScriptPurpose
-                          TxInInfo TxOut TxOutRef Value lovelaceValue)
+                          TxInInfo TxOut TxOutRef Value)
 
 structure Datum where
   owner : ByteString
@@ -21,24 +21,6 @@ structure Datum where
 def scriptAddr (h : ByteString) : Address :=
   { addressCredential := .ScriptCredential h
     addressStakingCredential := none }
-
-/-- Continuation value: exactly three entries (ada, `val` under
-    `ownHash`, requested asset under `(policyId, assetName)`). -/
-def threeEntryValue (lovelace : Int) (ownHash : ByteString)
-    (valQty : Int) (policyId assetName : ByteString)
-    (assetAmount : Int) : Value :=
-  [(Data.B "", Data.Map [(Data.B "", Data.I lovelace)]),
-   (Data.B ownHash, Data.Map [(Data.B "val", Data.I valQty)]),
-   (Data.B policyId, Data.Map [(Data.B assetName, Data.I assetAmount)])]
-
-/-- For our literal `threeEntryValue`, the stdlib's `validTxOutValue`
-    ledger predicate reduces to the strict-ordering and positivity
-    invariants the ledger guarantees on-chain. -/
-def wellFormedResolveValue
-    (lovelace : Int) (ownHash : ByteString) (valQty : Int)
-    (policyId assetName : ByteString) (assetAmount : Int) : Prop :=
-  CardanoLedgerApi.V1.Contexts.validTxOutValue
-    (threeEntryValue lovelace ownHash valQty policyId assetName assetAmount) = true
 
 def tagData : Option TxOutRef → Data
   | none => Data.Constr 1 []
@@ -58,13 +40,37 @@ def redeemerKindData : RedeemerKind → Data
   | .Resolve n => Data.Constr 0 [Data.I n]
   | .Close     => Data.Constr 1 []
 
-/-! ## Resolve transaction shape -/
+/-- Three-entry value carried by a script input: ada plus two arbitrary
+    tokens. Shared by every input across all order validators. -/
+structure InputValue where
+  lovelace : Int
+  policy1  : ByteString
+  asset1   : ByteString
+  qty1     : Int
+  policy2  : ByteString
+  asset2   : ByteString
+  qty2     : Int
+
+def inputValueToValue (iv : InputValue) : Value :=
+  [(Data.B "", Data.Map [(Data.B "", Data.I iv.lovelace)]),
+   (Data.B iv.policy1, Data.Map [(Data.B iv.asset1, Data.I iv.qty1)]),
+   (Data.B iv.policy2, Data.Map [(Data.B iv.asset2, Data.I iv.qty2)])]
+
+/-- Well-formedness of a `Resolve` continuation value: the ledger's
+    `validTxOutValue` predicate applied to the canonical three-entry
+    layout (ada, `val` under `ownHash`, requested asset). -/
+def wellFormedResolveValue
+    (lovelace : Int) (ownHash : ByteString) (valQty : Int)
+    (policyId assetName : ByteString) (assetAmount : Int) : Prop :=
+  CardanoLedgerApi.V1.Contexts.validTxOutValue
+    (inputValueToValue
+      ⟨lovelace, ownHash, "val", valQty, policyId, assetName, assetAmount⟩) = true
 
 /-- Script UTxO consumed by `Resolve`. -/
 structure ResolveInput where
-  ref      : TxOutRef
-  datum    : Datum
-  lovelace : Int
+  ref   : TxOutRef
+  datum : Datum
+  value : InputValue
 
 /-- Continuation output produced by `Resolve`. `valQty` is the quantity
     of `val` under the script's own policy; `assetAmount` is the
@@ -87,11 +93,13 @@ def resolveCtx
     (treasuryAmount treasuryDonation : Data) : ScriptContext :=
   let ownAddr := scriptAddr ownHash
   let inResolved : TxOut :=
-    ⟨ownAddr, lovelaceValue input.lovelace,
+    ⟨ownAddr,
+     inputValueToValue { input.value with policy1 := ownHash, asset1 := "val" },
      .OutputDatum (orderDatumData input.datum), none⟩
   let contValue :=
-    threeEntryValue cont.lovelace ownHash cont.valQty
-                    input.datum.policyId input.datum.assetName cont.assetAmount
+    inputValueToValue
+      ⟨cont.lovelace, ownHash, "val", cont.valQty,
+       input.datum.policyId, input.datum.assetName, cont.assetAmount⟩
   let contOutput : TxOut :=
     ⟨cont.address, contValue, .OutputDatum (orderDatumData cont.datum), none⟩
   { scriptContextTxInfo :=
@@ -124,6 +132,7 @@ def resolveCtx
 structure CloseInput where
   ref   : TxOutRef
   datum : Datum
+  value : InputValue
 
 /-- Mint entry burning the `val` token. -/
 structure CloseMint where
@@ -149,11 +158,11 @@ structure MintOutput where
 
 /-- Two script UTxOs at the same address sharing a datum. -/
 structure DSInputs where
-  datum     : Datum
-  ref1      : TxOutRef
-  ref2      : TxOutRef
-  lovelace1 : Int
-  lovelace2 : Int
+  datum  : Datum
+  ref1   : TxOutRef
+  ref2   : TxOutRef
+  value1 : InputValue
+  value2 : InputValue
 
 /-- Single continuation output shared by both inputs. -/
 structure DSContinuation where
@@ -174,12 +183,17 @@ def doubleInputCtx
   let ownAddr := scriptAddr ownHash
   let inDatumD := orderDatumData inputs.datum
   let in1 : TxOut :=
-    ⟨ownAddr, lovelaceValue inputs.lovelace1, .OutputDatum inDatumD, none⟩
+    ⟨ownAddr,
+     inputValueToValue { inputs.value1 with policy1 := ownHash, asset1 := "val" },
+     .OutputDatum inDatumD, none⟩
   let in2 : TxOut :=
-    ⟨ownAddr, lovelaceValue inputs.lovelace2, .OutputDatum inDatumD, none⟩
+    ⟨ownAddr,
+     inputValueToValue { inputs.value2 with policy1 := ownHash, asset1 := "val" },
+     .OutputDatum inDatumD, none⟩
   let contValue :=
-    threeEntryValue cont.lovelace ownHash cont.valQty
-                    inputs.datum.policyId inputs.datum.assetName cont.assetAmount
+    inputValueToValue
+      ⟨cont.lovelace, ownHash, "val", cont.valQty,
+       inputs.datum.policyId, inputs.datum.assetName, cont.assetAmount⟩
   let contOutput : TxOut :=
     ⟨ownAddr, contValue, .OutputDatum (orderDatumData cont.datum), none⟩
   { scriptContextTxInfo :=
@@ -214,13 +228,13 @@ def doubleInputCtx
 def noDoubleSatisfaction (acceptsProp : ScriptContext → Prop) : Prop :=
   ∀ (ownHash : ByteString) (inDatum contDatum : Datum)
     (ref1 ref2 : TxOutRef)
-    (lovelace1 lovelace2 contLovelace : Int)
-    (contValQty contAssetAmount : Int)
+    (value1 value2 : InputValue)
+    (contLovelace contValQty contAssetAmount : Int)
     (redeemer : RedeemerKind)
     (fee : Int) (validRange : Data) (txId : ByteString)
     (treasuryAmount treasuryDonation : Data),
     ref1 ≠ ref2 →
-    let inputs : DSInputs := ⟨inDatum, ref1, ref2, lovelace1, lovelace2⟩
+    let inputs : DSInputs := ⟨inDatum, ref1, ref2, value1, value2⟩
     let cont : DSContinuation := ⟨contDatum, contLovelace, contValQty, contAssetAmount⟩
     ¬ (acceptsProp
           (doubleInputCtx ownHash inputs cont ref1 redeemer

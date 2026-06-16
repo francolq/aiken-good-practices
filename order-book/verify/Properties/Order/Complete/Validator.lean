@@ -11,13 +11,13 @@ namespace Properties.Order.Complete.Validator
 
 open CardanoLedgerApi.IsData.Class (IsData toTerm)
 open CardanoLedgerApi.V3 (Address OutputDatum ScriptContext ScriptPurpose TxInInfo TxOut
-                          TxOutRef lovelaceValue singleton)
+                          TxOutRef singleton)
 open PlutusCore.ByteString (ByteString)
 open PlutusCore.Data (Data)
 open PlutusCore.UPLC.Term (Const Program)
 open PlutusCore.UPLC.CekMachine (cekExecuteProgram)
 open Properties.Order.Common (CloseInput CloseMint RedeemerKind ResolveInput ResolveContinuation
-                              scriptAddr wellFormedResolveValue
+                              scriptAddr wellFormedResolveValue inputValueToValue
                               orderDatumData redeemerKindData resolveCtx)
 open Properties.Order.Complete.Spec
 
@@ -41,7 +41,8 @@ def closeCtx
     (treasuryAmount treasuryDonation : Data) : ScriptContext :=
   let ownAddr := scriptAddr ownHash
   let inResolved : TxOut :=
-    ⟨ownAddr, lovelaceValue 0,
+    ⟨ownAddr,
+     inputValueToValue { input.value with policy1 := ownHash, asset1 := "val" },
      .OutputDatum (orderDatumData input.datum), none⟩
   { scriptContextTxInfo :=
       { txInfoInputs := [⟨input.ref, inResolved⟩]

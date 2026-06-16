@@ -18,7 +18,7 @@ open Properties.Order.Common (Datum ResolveInput ResolveContinuation scriptAddr)
 def validResolve (ownHash : ByteString)
     (input : ResolveInput) (cont : ResolveContinuation) : Prop :=
   cont.address = scriptAddr ownHash ∧
-  input.lovelace ≤ cont.lovelace ∧
+  input.value.lovelace ≤ cont.lovelace ∧
   cont.valQty = 1 ∧
   cont.assetAmount ≥ input.datum.amount ∧
   cont.datum = { input.datum with tag := none }
