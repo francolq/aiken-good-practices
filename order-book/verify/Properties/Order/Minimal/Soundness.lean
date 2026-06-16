@@ -3,7 +3,7 @@ import CardanoLedgerApi.V3
 import Blaster
 import Properties.Order.Common
 import Properties.Order.Minimal.Spec
-import Properties.Order.Minimal.Validator
+import Properties.Order.Minimal.Completeness
 
 /-! Soundness for the compiled minimal `order` validator. -/
 
@@ -13,7 +13,7 @@ open PlutusCore.ByteString (ByteString)
 open PlutusCore.Data (Data)
 open Properties.Order.Common (RedeemerKind)
 open Properties.Order.Minimal.Spec
-open Properties.Order.Minimal.Validator (closeCtx orderMinimalAcceptsProp resolveCtx)
+open Properties.Order.Minimal.Completeness (closeCtx orderMinimalAcceptsProp resolveCtx)
 
 set_option warn.sorry false
 

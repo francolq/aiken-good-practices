@@ -3,8 +3,8 @@ import CardanoLedgerApi.V3
 import Blaster
 import Properties.Order.Common
 import Properties.Order.Complete.Spec
-import Properties.Order.Complete.Validator
-import Properties.Order.Complete.MintValidator
+import Properties.Order.Complete.Completeness
+import Properties.Order.Complete.MintCompleteness
 
 /-! Soundness for the compiled complete `order` validator. Under the
     Value's well-formedness invariant, acceptance implies the spec
@@ -20,8 +20,8 @@ open Properties.Order.Common (CloseInput CloseMint MintAction MintOutput
                               RedeemerKind ResolveInput ResolveContinuation
                               wellFormedResolveValue resolveCtx)
 open Properties.Order.Complete.Spec
-open Properties.Order.Complete.Validator (closeCtx orderAcceptsProp)
-open Properties.Order.Complete.MintValidator (burnCtx mintCtxMint orderMintAcceptsProp)
+open Properties.Order.Complete.Completeness (closeCtx orderAcceptsProp)
+open Properties.Order.Complete.MintCompleteness (burnCtx mintCtxMint orderMintAcceptsProp)
 
 set_option warn.sorry false
 

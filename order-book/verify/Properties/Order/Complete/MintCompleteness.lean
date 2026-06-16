@@ -7,7 +7,7 @@ import Properties.Order.Complete.Spec
 /-! Completeness theorems and execution wrappers for the compiled
     complete `order` minting policy. -/
 
-namespace Properties.Order.Complete.MintValidator
+namespace Properties.Order.Complete.MintCompleteness
 
 open CardanoLedgerApi.IsData.Class (IsData toTerm)
 open CardanoLedgerApi.V3 (Address OutputDatum ScriptContext ScriptPurpose TxOut TxOutRef
@@ -112,4 +112,4 @@ theorem burn_complete :
                  fee validRange txId treasuryAmount treasuryDonation)
     := by blaster
 
-end Properties.Order.Complete.MintValidator
+end Properties.Order.Complete.MintCompleteness

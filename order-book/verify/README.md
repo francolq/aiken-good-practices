@@ -9,9 +9,9 @@ Lean 4 proofs about the compiled UPLC of `validators/order.ak`.
   CEK execution states.
 - `Properties/Order/`:
   - `Spec.lean`. Pure-Lean specification of the intended logic. No UPLC.
-  - `Validator.lean`. Loads `order_spend.flat`, builds spend contexts,
+  - `Completeness.lean`. Loads `order_spend.flat`, builds spend contexts,
     proves `Resolve` / `Close` completeness via `blaster`.
-  - `MintValidator.lean`. Same for `order_mint.flat` (`Mint` / `Burn`).
+  - `MintCompleteness.lean`. Same for `order_mint.flat` (`Mint` / `Burn`).
   - `Soundness.lean`. `accepts ⇒ spec` for all four branches.
   - `Robustness.lean`. Rejection theorems, including
     `no_double_satisfaction`.
@@ -22,7 +22,7 @@ Lean 4 proofs about the compiled UPLC of `validators/order.ak`.
 
 ```sh
 lake build                                        # type-check every proof
-lake env lean Properties/Order/Validator.lean     # one module
+lake env lean Properties/Order/Completeness.lean  # one module
 ```
 
 The toolchain is pinned in `lean-toolchain`; `elan` fetches it on first build.

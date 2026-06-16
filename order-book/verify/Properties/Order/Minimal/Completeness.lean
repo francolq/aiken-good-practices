@@ -7,7 +7,7 @@ import Properties.Order.Minimal.Spec
 /-! Completeness theorems and execution wrappers for the compiled
     minimal `order` spending validator. -/
 
-namespace Properties.Order.Minimal.Validator
+namespace Properties.Order.Minimal.Completeness
 
 open CardanoLedgerApi.IsData.Class (toTerm)
 open CardanoLedgerApi.V3 (Address OutputDatum ScriptContext ScriptPurpose TxInInfo TxOut
@@ -130,4 +130,4 @@ theorem close_complete :
                   fee validRange txId treasuryAmount treasuryDonation)
     := by blaster
 
-end Properties.Order.Minimal.Validator
+end Properties.Order.Minimal.Completeness

@@ -6,7 +6,7 @@ import Properties.Order.Vulnerable.Spec
 
 /-! Completeness for the vulnerable validator's `Resolve` branch. -/
 
-namespace Properties.Order.Vulnerable.Validator
+namespace Properties.Order.Vulnerable.Completeness
 
 open CardanoLedgerApi.IsData.Class (toTerm)
 open CardanoLedgerApi.V3 (Address ScriptContext TxOutRef)
@@ -41,4 +41,4 @@ theorem resolve_complete :
                     fee validRange txId treasuryAmount treasuryDonation)
     := by blaster
 
-end Properties.Order.Vulnerable.Validator
+end Properties.Order.Vulnerable.Completeness

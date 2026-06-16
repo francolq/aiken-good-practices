@@ -2,14 +2,14 @@ import PlutusCore.UPLC
 import CardanoLedgerApi.V3
 import Blaster
 import Properties.Order.Minimal.DoubleSatisfaction
-import Properties.Order.MinimalSingle.Validator
+import Properties.Order.MinimalSingle.Completeness
 
 /-! The single-input restriction prevents double-satisfaction. -/
 
 namespace Properties.Order.MinimalSingle.DoubleSatisfaction
 
 open Properties.Order.Minimal.DoubleSatisfaction (noDoubleSatisfaction)
-open Properties.Order.MinimalSingle.Validator (orderMinimalSingleAcceptsProp)
+open Properties.Order.MinimalSingle.Completeness (orderMinimalSingleAcceptsProp)
 
 set_option warn.sorry false
 

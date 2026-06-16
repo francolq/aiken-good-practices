@@ -3,8 +3,8 @@ import CardanoLedgerApi.V3
 import Blaster
 import Properties.Order.Common
 import Properties.Order.Minimal.Spec
-import Properties.Order.Minimal.Validator
-import Properties.Order.MinimalSingle.Validator
+import Properties.Order.Minimal.Completeness
+import Properties.Order.MinimalSingle.Completeness
 
 /-! Soundness for the minimal-single-input `order` validator. -/
 
@@ -14,8 +14,8 @@ open PlutusCore.ByteString (ByteString)
 open PlutusCore.Data (Data)
 open Properties.Order.Common (RedeemerKind)
 open Properties.Order.Minimal.Spec
-open Properties.Order.Minimal.Validator (closeCtx resolveCtx)
-open Properties.Order.MinimalSingle.Validator (orderMinimalSingleAcceptsProp)
+open Properties.Order.Minimal.Completeness (closeCtx resolveCtx)
+open Properties.Order.MinimalSingle.Completeness (orderMinimalSingleAcceptsProp)
 
 set_option warn.sorry false
 

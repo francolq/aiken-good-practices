@@ -3,7 +3,7 @@ import CardanoLedgerApi.V3
 import Blaster
 import Properties.Order.Common
 import Properties.Order.Vulnerable.Spec
-import Properties.Order.Vulnerable.Validator
+import Properties.Order.Vulnerable.Completeness
 
 /-! Soundness for the compiled vulnerable validator's `Resolve` branch. -/
 
@@ -15,7 +15,7 @@ open CardanoLedgerApi.V3 (Address TxOutRef)
 open Properties.Order.Common (Datum RedeemerKind ResolveInput ResolveContinuation
                               wellFormedResolveValue resolveCtx)
 open Properties.Order.Vulnerable.Spec
-open Properties.Order.Vulnerable.Validator (orderVulnerableAcceptsProp)
+open Properties.Order.Vulnerable.Completeness (orderVulnerableAcceptsProp)
 
 set_option warn.sorry false
 

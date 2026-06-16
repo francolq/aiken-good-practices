@@ -7,7 +7,7 @@ import Properties.Order.Complete.Spec
 /-! Completeness theorems and execution wrappers for the compiled
     complete `order` spending validator. -/
 
-namespace Properties.Order.Complete.Validator
+namespace Properties.Order.Complete.Completeness
 
 open CardanoLedgerApi.IsData.Class (IsData toTerm)
 open CardanoLedgerApi.V3 (Address OutputDatum ScriptContext ScriptPurpose TxInInfo TxOut
@@ -94,4 +94,4 @@ theorem close_complete :
                   fee validRange txId treasuryAmount treasuryDonation)
     := by blaster
 
-end Properties.Order.Complete.Validator
+end Properties.Order.Complete.Completeness

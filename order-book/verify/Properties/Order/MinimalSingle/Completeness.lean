@@ -3,13 +3,13 @@ import CardanoLedgerApi.V3
 import Blaster
 import Properties.Order.Common
 import Properties.Order.Minimal.Spec
-import Properties.Order.Minimal.Validator
+import Properties.Order.Minimal.Completeness
 
 /-! Completeness for the minimal-single-input `order` validator. Same
     spec as `Minimal`, but the validator additionally requires exactly
     one input at the script's own address. -/
 
-namespace Properties.Order.MinimalSingle.Validator
+namespace Properties.Order.MinimalSingle.Completeness
 
 open CardanoLedgerApi.IsData.Class (toTerm)
 open CardanoLedgerApi.V3 (ScriptContext)
@@ -19,7 +19,7 @@ open PlutusCore.UPLC.Term (Const Program)
 open PlutusCore.UPLC.CekMachine (cekExecuteProgram)
 open Properties.Order.Common (RedeemerKind)
 open Properties.Order.Minimal.Spec
-open Properties.Order.Minimal.Validator (closeCtx resolveCtx)
+open Properties.Order.Minimal.Completeness (closeCtx resolveCtx)
 
 set_option warn.sorry false
 
@@ -55,4 +55,4 @@ theorem close_complete :
                   fee validRange txId treasuryAmount treasuryDonation)
     := by blaster
 
-end Properties.Order.MinimalSingle.Validator
+end Properties.Order.MinimalSingle.Completeness
