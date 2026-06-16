@@ -2,6 +2,7 @@ import PlutusCore.UPLC
 import CardanoLedgerApi.V3
 import Blaster
 import Properties.Order.Common
+import Properties.Order.Complete.Spec
 import Properties.Order.Vulnerable.Spec
 
 /-! Completeness for the vulnerable validator's `Resolve` branch. -/
@@ -14,8 +15,8 @@ open PlutusCore.ByteString (ByteString)
 open PlutusCore.Data (Data)
 open PlutusCore.UPLC.Term (Const Program)
 open PlutusCore.UPLC.CekMachine (cekExecuteProgram)
-open Properties.Order.Common (Datum ResolveInput ResolveContinuation
-                              wellFormedResolveValue resolveCtx)
+open Properties.Order.Complete.Spec (OrderDatum ResolveInput ResolveContinuation
+                                     wellFormedResolveValue resolveCtx)
 open Properties.Order.Vulnerable.Spec
 
 set_option warn.sorry false

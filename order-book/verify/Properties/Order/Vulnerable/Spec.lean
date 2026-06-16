@@ -1,16 +1,20 @@
 import Properties.Order.Common
+import Properties.Order.Complete.Spec
 
 /-! Pure Lean specification for the vulnerable `order` validator.
 
     The vulnerable variant fails to bind the continuation to the input:
     its `Resolve` branch checks `tag = none` instead of `tag = some own_ref`,
-    leaving the validator open to double-satisfaction attacks. -/
+    leaving the validator open to double-satisfaction attacks. It reuses
+    `OrderDatum`, `ResolveInput` and `ResolveContinuation` from the
+    `Complete.Spec` module. -/
 
 namespace Properties.Order.Vulnerable.Spec
 
 open PlutusCore.ByteString (ByteString)
 open CardanoLedgerApi.V3 (Address TxOutRef)
-open Properties.Order.Common (Datum ResolveInput ResolveContinuation scriptAddr)
+open Properties.Order.Common (scriptAddr)
+open Properties.Order.Complete.Spec (OrderDatum ResolveInput ResolveContinuation)
 
 /-- Resolve spec for the vulnerable validator. Same shape as the complete
     spec except the continuation datum carries `tag := none`, which

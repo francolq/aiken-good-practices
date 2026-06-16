@@ -16,7 +16,6 @@ open PlutusCore.ByteString (ByteString)
 open PlutusCore.Data (Data)
 open PlutusCore.UPLC.Term (Const Program)
 open PlutusCore.UPLC.CekMachine (cekExecuteProgram)
-open Properties.Order.Common (Datum MintAction MintOutput orderDatumData)
 open Properties.Order.Complete.Spec
 
 set_option warn.sorry false
@@ -37,7 +36,7 @@ def mintCtxMint
     (mint : MintAction) (output : MintOutput)
     (fee : Int) (validRange : Data) (txId : ByteString)
     (treasuryAmount treasuryDonation : Data) : ScriptContext :=
-  let initialDatum : Datum := ⟨"", 0, "", "", output.tag⟩
+  let initialDatum : OrderDatum := ⟨"", 0, "", "", output.tag⟩
   let initialOutput : TxOut :=
     ⟨output.address, singleton mint.policyId "val" output.valQty,
      .OutputDatum (orderDatumData initialDatum), none⟩

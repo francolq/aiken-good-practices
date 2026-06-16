@@ -19,14 +19,14 @@ open Properties.Order.Minimal.Completeness (orderMinimalAcceptsProp)
 set_option warn.sorry false
 
 structure DSInputs where
-  datum  : Datum
+  datum  : OrderDatum
   ref1   : TxOutRef
   ref2   : TxOutRef
   value1 : InputValue
   value2 : InputValue
 
 structure DSContinuation where
-  datum       : Datum
+  datum       : OrderDatum
   lovelace    : Int
   assetAmount : Int
 
@@ -73,7 +73,7 @@ def doubleInputCtx
   }
 
 def noDoubleSatisfaction (acceptsProp : ScriptContext → Prop) : Prop :=
-  ∀ (ownHash : ByteString) (inDatum contDatum : Datum)
+  ∀ (ownHash : ByteString) (inDatum contDatum : OrderDatum)
     (ref1 ref2 : TxOutRef)
     (value1 value2 : InputValue)
     (contLovelace contAssetAmount : Int)

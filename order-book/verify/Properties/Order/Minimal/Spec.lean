@@ -14,13 +14,13 @@ open PlutusCore.Data (Data)
 open CardanoLedgerApi.V3 (Address TxOutRef Value)
 open Properties.Order.Common (InputValue scriptAddr)
 
-structure Datum where
+structure OrderDatum where
   owner     : ByteString
   amount    : Int
   policyId  : ByteString
   assetName : ByteString
 
-def datumData (d : Datum) : Data :=
+def datumData (d : OrderDatum) : Data :=
   Data.Constr 0
     [Data.B d.owner, Data.I d.amount, Data.B d.policyId, Data.B d.assetName]
 
@@ -38,18 +38,18 @@ def wellFormedResolveValue
 
 structure ResolveInput where
   ref   : TxOutRef
-  datum : Datum
+  datum : OrderDatum
   value : InputValue
 
 structure ResolveContinuation where
   address     : Address
-  datum       : Datum
+  datum       : OrderDatum
   lovelace    : Int
   assetAmount : Int
 
 structure CloseInput where
   ref   : TxOutRef
-  datum : Datum
+  datum : OrderDatum
   value : InputValue
 
 /-- Resolve spec: some output pays at least `amount` of the requested

@@ -16,9 +16,7 @@ open PlutusCore.ByteString (ByteString)
 open PlutusCore.Data (Data)
 open PlutusCore.UPLC.Term (Const Program)
 open PlutusCore.UPLC.CekMachine (cekExecuteProgram)
-open Properties.Order.Common (CloseInput CloseMint RedeemerKind ResolveInput ResolveContinuation
-                              scriptAddr wellFormedResolveValue inputValueToValue
-                              orderDatumData redeemerKindData resolveCtx)
+open Properties.Order.Common (RedeemerKind scriptAddr inputValueToValue redeemerKindData)
 open Properties.Order.Complete.Spec
 
 set_option warn.sorry false

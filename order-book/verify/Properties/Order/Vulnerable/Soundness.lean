@@ -2,6 +2,7 @@ import PlutusCore.UPLC
 import CardanoLedgerApi.V3
 import Blaster
 import Properties.Order.Common
+import Properties.Order.Complete.Spec
 import Properties.Order.Vulnerable.Spec
 import Properties.Order.Vulnerable.Completeness
 
@@ -12,8 +13,9 @@ namespace Properties.Order.Vulnerable.Soundness
 open PlutusCore.ByteString (ByteString)
 open PlutusCore.Data (Data)
 open CardanoLedgerApi.V3 (Address TxOutRef)
-open Properties.Order.Common (Datum RedeemerKind ResolveInput ResolveContinuation
-                              wellFormedResolveValue resolveCtx)
+open Properties.Order.Common (RedeemerKind)
+open Properties.Order.Complete.Spec (OrderDatum ResolveInput ResolveContinuation
+                                     wellFormedResolveValue resolveCtx)
 open Properties.Order.Vulnerable.Spec
 open Properties.Order.Vulnerable.Completeness (orderVulnerableAcceptsProp)
 

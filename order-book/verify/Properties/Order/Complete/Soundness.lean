@@ -16,9 +16,7 @@ namespace Properties.Order.Complete.Soundness
 open PlutusCore.ByteString (ByteString)
 open PlutusCore.Data (Data)
 open CardanoLedgerApi.V3 (Address Credential TxOutRef)
-open Properties.Order.Common (CloseInput CloseMint MintAction MintOutput
-                              RedeemerKind ResolveInput ResolveContinuation
-                              wellFormedResolveValue resolveCtx)
+open Properties.Order.Common (RedeemerKind)
 open Properties.Order.Complete.Spec
 open Properties.Order.Complete.Completeness (closeCtx orderAcceptsProp)
 open Properties.Order.Complete.MintCompleteness (burnCtx mintCtxMint orderMintAcceptsProp)
