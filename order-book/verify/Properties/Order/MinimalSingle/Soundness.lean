@@ -19,18 +19,21 @@ open Properties.Order.MinimalSingle.Completeness (orderMinimalSingleAcceptsProp)
 
 set_option warn.sorry false
 
-/-- Soundness of the `Resolve` branch. -/
-theorem resolve_sound :
-    ∀ (ownHash : ByteString) (input : ResolveInput) (cont : ResolveContinuation)
-      (r : RedeemerKind)
-      (fee : Int) (validRange : Data) (txId : ByteString)
-      (treasuryAmount treasuryDonation : Data),
-      wellFormedResolveValue cont.lovelace
-                             input.datum.policyId input.datum.assetName cont.assetAmount →
-      orderMinimalSingleAcceptsProp
-        (resolveCtx ownHash input cont r
-                    fee validRange txId treasuryAmount treasuryDonation) →
-      validResolve input cont
+/-- The minimal-single-input validator's `Resolve` branch is *unsound*:
+    the single-input restriction only blocks double-satisfaction; it
+    does not constrain the continuation's address or datum, so the
+    property in `Spec.validResolve` does not follow from acceptance. -/
+theorem resolve_unsound :
+    ¬ (∀ (ownHash : ByteString) (input : ResolveInput) (cont : ResolveContinuation)
+        (r : RedeemerKind)
+        (fee : Int) (validRange : Data) (txId : ByteString)
+        (treasuryAmount treasuryDonation : Data),
+        wellFormedResolveValue cont.lovelace
+                               input.datum.policyId input.datum.assetName cont.assetAmount →
+        orderMinimalSingleAcceptsProp
+          (resolveCtx ownHash input cont r
+                      fee validRange txId treasuryAmount treasuryDonation) →
+        validResolve ownHash input cont)
     := by blaster
 
 /-- Soundness of the `Close` branch. -/
