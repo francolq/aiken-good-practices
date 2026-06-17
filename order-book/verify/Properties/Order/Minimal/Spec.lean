@@ -52,10 +52,13 @@ structure CloseInput where
   datum : OrderDatum
   value : InputValue
 
-/-- Resolve spec: some output pays at least `amount` of the requested
-    asset. No address or datum constraint. -/
-def validResolve
+/-- Resolve spec: the continuation lives at the script's own address,
+    preserves the input datum, and pays at least `amount` of the
+    requested asset. -/
+def validResolve (ownHash : ByteString)
     (input : ResolveInput) (cont : ResolveContinuation) : Prop :=
+  cont.address = scriptAddr ownHash ∧
+  cont.datum = input.datum ∧
   cont.assetAmount ≥ input.datum.amount
 
 /-- Close spec: the signer matches the input datum's owner. -/

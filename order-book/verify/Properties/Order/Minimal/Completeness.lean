@@ -113,7 +113,7 @@ theorem resolve_complete :
       (treasuryAmount treasuryDonation : Data),
       wellFormedResolveValue cont.lovelace
                              input.datum.policyId input.datum.assetName cont.assetAmount →
-      validResolve input cont →
+      validResolve ownHash input cont →
       orderMinimalAcceptsProp
         (resolveCtx ownHash input cont (.Resolve 0)
                     fee validRange txId treasuryAmount treasuryDonation)

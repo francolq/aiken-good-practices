@@ -17,18 +17,21 @@ open Properties.Order.Minimal.Completeness (closeCtx orderMinimalAcceptsProp res
 
 set_option warn.sorry false
 
-/-- Soundness of the `Resolve` branch. -/
-theorem resolve_sound :
-    ∀ (ownHash : ByteString) (input : ResolveInput) (cont : ResolveContinuation)
-      (r : RedeemerKind)
-      (fee : Int) (validRange : Data) (txId : ByteString)
-      (treasuryAmount treasuryDonation : Data),
-      wellFormedResolveValue cont.lovelace
-                             input.datum.policyId input.datum.assetName cont.assetAmount →
-      orderMinimalAcceptsProp
-        (resolveCtx ownHash input cont r
-                    fee validRange txId treasuryAmount treasuryDonation) →
-      validResolve input cont
+/-- The minimal validator's `Resolve` branch is *unsound*: it accepts
+    transactions whose continuation breaks the address or datum
+    constraint, so the property in `Spec.validResolve` does not follow
+    from acceptance. -/
+theorem resolve_unsound :
+    ¬ (∀ (ownHash : ByteString) (input : ResolveInput) (cont : ResolveContinuation)
+        (r : RedeemerKind)
+        (fee : Int) (validRange : Data) (txId : ByteString)
+        (treasuryAmount treasuryDonation : Data),
+        wellFormedResolveValue cont.lovelace
+                               input.datum.policyId input.datum.assetName cont.assetAmount →
+        orderMinimalAcceptsProp
+          (resolveCtx ownHash input cont r
+                      fee validRange txId treasuryAmount treasuryDonation) →
+        validResolve ownHash input cont)
     := by blaster
 
 /-- Soundness of the `Close` branch. -/
