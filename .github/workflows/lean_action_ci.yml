@@ -34,5 +34,7 @@ jobs:
         run: make flats
 
       - uses: leanprover/lean-action@v1
+        env:
+          LEAN_NUM_THREADS: "2"
         with:
           lake-package-directory: order-book/verify
