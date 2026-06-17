@@ -1,6 +1,7 @@
 import PlutusCore.UPLC
 import CardanoLedgerApi.V3
 import Blaster
+import Properties.Common
 import Properties.Order.Common
 import Properties.Order.Complete.Spec
 
@@ -9,13 +10,12 @@ import Properties.Order.Complete.Spec
 
 namespace Properties.Order.Complete.Completeness
 
-open CardanoLedgerApi.IsData.Class (IsData toTerm)
 open CardanoLedgerApi.V3 (Address OutputDatum ScriptContext ScriptPurpose TxInInfo TxOut
                           TxOutRef singleton)
 open PlutusCore.ByteString (ByteString)
 open PlutusCore.Data (Data)
-open PlutusCore.UPLC.Term (Const Program)
-open PlutusCore.UPLC.CekMachine (cekExecuteProgram)
+open PlutusCore.UPLC.Term (Program)
+open Properties.Common (validatorAccepts)
 open Properties.Order.Common (RedeemerKind scriptAddr inputValueToValue redeemerKindData)
 open Properties.Order.Complete.Spec
 
@@ -24,10 +24,6 @@ set_option warn.sorry false
 #import_uplc orderScript PlutusV3 flat_hex "Scripts/order_spend.flat"
 
 def orderValidator : Program := orderScript.script
-
-def orderAcceptsProp (ctx : ScriptContext) : Prop :=
-  cekExecuteProgram orderValidator [toTerm ctx] 5000000
-    = .Halt (.VCon Const.Unit)
 
 /-- `ScriptContext` for a `Close`-style transaction. -/
 def closeCtx
@@ -75,9 +71,10 @@ theorem resolve_complete :
       wellFormedResolveValue cont.lovelace ownHash cont.valQty
                              input.datum.policyId input.datum.assetName cont.assetAmount →
       validResolve ownHash input cont →
-      orderAcceptsProp
+      validatorAccepts
         (resolveCtx ownHash input cont (.Resolve 0)
                     fee validRange txId treasuryAmount treasuryDonation)
+        orderValidator
     := by blaster
 
 /-- Completeness of the `Close` branch. -/
@@ -87,9 +84,10 @@ theorem close_complete :
       (fee : Int) (validRange : Data) (txId : ByteString)
       (treasuryAmount treasuryDonation : Data),
       validClose ownHash input signer mint →
-      orderAcceptsProp
+      validatorAccepts
         (closeCtx ownHash input signer mint mintRedeemer .Close
                   fee validRange txId treasuryAmount treasuryDonation)
+        orderValidator
     := by blaster
 
 end Properties.Order.Complete.Completeness

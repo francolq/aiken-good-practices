@@ -1,6 +1,7 @@
 import PlutusCore.UPLC
 import CardanoLedgerApi.V3
 import Blaster
+import Properties.Common
 import Properties.Order.Common
 import Properties.Order.Minimal.Spec
 
@@ -9,13 +10,12 @@ import Properties.Order.Minimal.Spec
 
 namespace Properties.Order.Minimal.Completeness
 
-open CardanoLedgerApi.IsData.Class (toTerm)
 open CardanoLedgerApi.V3 (Address OutputDatum ScriptContext ScriptPurpose TxInInfo TxOut
                           TxOutRef)
 open PlutusCore.ByteString (ByteString)
 open PlutusCore.Data (Data)
-open PlutusCore.UPLC.Term (Const Program)
-open PlutusCore.UPLC.CekMachine (cekExecuteProgram)
+open PlutusCore.UPLC.Term (Program)
+open Properties.Common (validatorAccepts)
 open Properties.Order.Common (RedeemerKind scriptAddr redeemerKindData inputValueToValue)
 open Properties.Order.Minimal.Spec
 
@@ -24,10 +24,6 @@ set_option warn.sorry false
 #import_uplc orderMinimalScript PlutusV3 flat_hex "Scripts/order_minimal_spend.flat"
 
 def orderMinimalValidator : Program := orderMinimalScript.script
-
-def orderMinimalAcceptsProp (ctx : ScriptContext) : Prop :=
-  cekExecuteProgram orderMinimalValidator [toTerm ctx] 5000000
-    = .Halt (.VCon Const.Unit)
 
 /-- `ScriptContext` for a `Resolve`-style transaction, parametric in
     the spend redeemer `r`. -/
@@ -114,9 +110,10 @@ theorem resolve_complete :
       wellFormedResolveValue cont.lovelace
                              input.datum.policyId input.datum.assetName cont.assetAmount →
       validResolve ownHash input cont →
-      orderMinimalAcceptsProp
+      validatorAccepts
         (resolveCtx ownHash input cont (.Resolve 0)
                     fee validRange txId treasuryAmount treasuryDonation)
+        orderMinimalValidator
     := by blaster
 
 /-- Completeness of the `Close` branch. -/
@@ -125,9 +122,10 @@ theorem close_complete :
       (fee : Int) (validRange : Data) (txId : ByteString)
       (treasuryAmount treasuryDonation : Data),
       validClose input signer →
-      orderMinimalAcceptsProp
+      validatorAccepts
         (closeCtx ownHash input signer .Close
                   fee validRange txId treasuryAmount treasuryDonation)
+        orderMinimalValidator
     := by blaster
 
 end Properties.Order.Minimal.Completeness

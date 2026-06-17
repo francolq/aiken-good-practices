@@ -1,6 +1,7 @@
 import PlutusCore.UPLC
 import CardanoLedgerApi.V3
 import Blaster
+import Properties.Common
 import Properties.Order.Common
 import Properties.Order.Minimal.Spec
 import Properties.Order.Minimal.Completeness
@@ -12,9 +13,10 @@ namespace Properties.Order.Minimal.DoubleSatisfaction
 open PlutusCore.ByteString (ByteString)
 open PlutusCore.Data (Data)
 open CardanoLedgerApi.V3 (Address ScriptContext ScriptPurpose TxOut TxOutRef)
+open Properties.Common (validatorAccepts)
 open Properties.Order.Common (InputValue RedeemerKind redeemerKindData scriptAddr inputValueToValue)
 open Properties.Order.Minimal.Spec
-open Properties.Order.Minimal.Completeness (orderMinimalAcceptsProp)
+open Properties.Order.Minimal.Completeness (orderMinimalValidator)
 
 set_option warn.sorry false
 
@@ -91,7 +93,7 @@ def noDoubleSatisfaction (acceptsProp : ScriptContext → Prop) : Prop :=
                           fee validRange txId treasuryAmount treasuryDonation))
 
 theorem no_double_satisfaction_fails :
-    ¬ noDoubleSatisfaction orderMinimalAcceptsProp
+    ¬ noDoubleSatisfaction (validatorAccepts · orderMinimalValidator)
     := by blaster
 
 end Properties.Order.Minimal.DoubleSatisfaction

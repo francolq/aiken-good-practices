@@ -1,6 +1,7 @@
 import PlutusCore.UPLC
 import CardanoLedgerApi.V3
 import Blaster
+import Properties.Common
 import Properties.Order.Common
 import Properties.Order.Complete.Spec
 
@@ -9,13 +10,12 @@ import Properties.Order.Complete.Spec
 
 namespace Properties.Order.Complete.MintCompleteness
 
-open CardanoLedgerApi.IsData.Class (IsData toTerm)
 open CardanoLedgerApi.V3 (Address OutputDatum ScriptContext ScriptPurpose TxOut TxOutRef
                           singleton)
 open PlutusCore.ByteString (ByteString)
 open PlutusCore.Data (Data)
-open PlutusCore.UPLC.Term (Const Program)
-open PlutusCore.UPLC.CekMachine (cekExecuteProgram)
+open PlutusCore.UPLC.Term (Program)
+open Properties.Common (validatorAccepts)
 open Properties.Order.Complete.Spec
 
 set_option warn.sorry false
@@ -23,10 +23,6 @@ set_option warn.sorry false
 #import_uplc orderMintScript PlutusV3 flat_hex "Scripts/order_mint.flat"
 
 def orderMintValidator : Program := orderMintScript.script
-
-def orderMintAcceptsProp (ctx : ScriptContext) : Prop :=
-  cekExecuteProgram orderMintValidator [toTerm ctx] 5000000
-    = .Halt (.VCon Const.Unit)
 
 def mintRedeemerMint : Data := Data.Constr 0 []
 def mintRedeemerBurn : Data := Data.Constr 1 []
@@ -95,9 +91,10 @@ theorem mint_complete :
       (fee : Int) (validRange : Data) (txId : ByteString)
       (treasuryAmount treasuryDonation : Data),
       validMint mint output →
-      orderMintAcceptsProp
+      validatorAccepts
         (mintCtxMint mint output
                      fee validRange txId treasuryAmount treasuryDonation)
+        orderMintValidator
     := by blaster
 
 /-- Completeness of the `Burn` branch. -/
@@ -106,9 +103,10 @@ theorem burn_complete :
       (fee : Int) (validRange : Data) (txId : ByteString)
       (treasuryAmount treasuryDonation : Data),
       validBurn burnedQty →
-      orderMintAcceptsProp
+      validatorAccepts
         (burnCtx policyId burnedQty
                  fee validRange txId treasuryAmount treasuryDonation)
+        orderMintValidator
     := by blaster
 
 end Properties.Order.Complete.MintCompleteness

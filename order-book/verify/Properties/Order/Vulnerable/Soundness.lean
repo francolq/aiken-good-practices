@@ -1,6 +1,7 @@
 import PlutusCore.UPLC
 import CardanoLedgerApi.V3
 import Blaster
+import Properties.Common
 import Properties.Order.Common
 import Properties.Order.Complete.Spec
 import Properties.Order.Vulnerable.Spec
@@ -13,11 +14,12 @@ namespace Properties.Order.Vulnerable.Soundness
 open PlutusCore.ByteString (ByteString)
 open PlutusCore.Data (Data)
 open CardanoLedgerApi.V3 (Address TxOutRef)
+open Properties.Common (validatorAccepts)
 open Properties.Order.Common (RedeemerKind)
 open Properties.Order.Complete.Spec (OrderDatum ResolveInput ResolveContinuation
                                      wellFormedResolveValue resolveCtx)
 open Properties.Order.Vulnerable.Spec
-open Properties.Order.Vulnerable.Completeness (orderVulnerableAcceptsProp)
+open Properties.Order.Vulnerable.Completeness (orderVulnerableValidator)
 
 set_option warn.sorry false
 
@@ -29,9 +31,10 @@ theorem resolve_sound :
       (treasuryAmount treasuryDonation : Data),
       wellFormedResolveValue cont.lovelace ownHash cont.valQty
                              input.datum.policyId input.datum.assetName cont.assetAmount →
-      orderVulnerableAcceptsProp
+      validatorAccepts
         (resolveCtx ownHash input cont r
-                    fee validRange txId treasuryAmount treasuryDonation) →
+                    fee validRange txId treasuryAmount treasuryDonation)
+        orderVulnerableValidator →
       validResolve ownHash input cont
     := by blaster
 

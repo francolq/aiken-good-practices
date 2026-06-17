@@ -1,6 +1,7 @@
 import PlutusCore.UPLC
 import CardanoLedgerApi.V3
 import Blaster
+import Properties.Common
 import Properties.Order.Common
 import Properties.Order.Minimal.Spec
 import Properties.Order.Minimal.Completeness
@@ -11,9 +12,10 @@ namespace Properties.Order.Minimal.Soundness
 
 open PlutusCore.ByteString (ByteString)
 open PlutusCore.Data (Data)
+open Properties.Common (validatorAccepts)
 open Properties.Order.Common (RedeemerKind)
 open Properties.Order.Minimal.Spec
-open Properties.Order.Minimal.Completeness (closeCtx orderMinimalAcceptsProp resolveCtx)
+open Properties.Order.Minimal.Completeness (closeCtx orderMinimalValidator resolveCtx)
 
 set_option warn.sorry false
 
@@ -28,9 +30,10 @@ theorem resolve_unsound :
         (treasuryAmount treasuryDonation : Data),
         wellFormedResolveValue cont.lovelace
                                input.datum.policyId input.datum.assetName cont.assetAmount →
-        orderMinimalAcceptsProp
+        validatorAccepts
           (resolveCtx ownHash input cont r
-                      fee validRange txId treasuryAmount treasuryDonation) →
+                      fee validRange txId treasuryAmount treasuryDonation)
+          orderMinimalValidator →
         validResolve ownHash input cont)
     := by blaster
 
@@ -40,9 +43,10 @@ theorem close_sound :
       (r : RedeemerKind)
       (fee : Int) (validRange : Data) (txId : ByteString)
       (treasuryAmount treasuryDonation : Data),
-      orderMinimalAcceptsProp
+      validatorAccepts
         (closeCtx ownHash input signer r
-                  fee validRange txId treasuryAmount treasuryDonation) →
+                  fee validRange txId treasuryAmount treasuryDonation)
+        orderMinimalValidator →
       validClose input signer
     := by blaster
 
