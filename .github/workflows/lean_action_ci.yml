@@ -14,7 +14,7 @@ jobs:
 
       - name: Install Z3
         run: |
-          Z3_VERSION=4.15.2
+          Z3_VERSION=4.16.0
           Z3_DIR=z3-${Z3_VERSION}-x64-glibc-2.39
           curl -L -o z3.zip "https://github.com/Z3Prover/z3/releases/download/z3-${Z3_VERSION}/${Z3_DIR}.zip"
           unzip -q z3.zip -d /tmp/z3
@@ -34,7 +34,5 @@ jobs:
         run: make flats
 
       - uses: leanprover/lean-action@v1
-        env:
-          LEAN_NUM_THREADS: "2"
         with:
           lake-package-directory: order-book/verify
