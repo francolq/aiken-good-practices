@@ -4,7 +4,6 @@ import Blaster
 import Properties.Common
 import Properties.Order.Common
 import Properties.Order.Minimal.Spec
-import Properties.Order.Minimal.Completeness
 
 /-! Completeness for the minimal-single-input `order` validator. Same
     spec as `Minimal`, but the validator additionally requires exactly
@@ -18,7 +17,6 @@ open PlutusCore.UPLC.Term (Program)
 open Properties.Common (validatorAccepts)
 open Properties.Order.Common (RedeemerKind)
 open Properties.Order.Minimal.Spec
-open Properties.Order.Minimal.Completeness (closeCtx resolveCtx)
 
 set_option warn.sorry false
 

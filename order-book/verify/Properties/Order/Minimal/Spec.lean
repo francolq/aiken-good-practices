@@ -11,8 +11,10 @@ namespace Properties.Order.Minimal.Spec
 
 open PlutusCore.ByteString (ByteString)
 open PlutusCore.Data (Data)
-open CardanoLedgerApi.V3 (Address TxOutRef Value)
-open Properties.Order.Common (InputValue scriptAddr)
+open CardanoLedgerApi.V3 (Address OutputDatum ScriptContext ScriptPurpose TxInInfo TxOut
+                          TxOutRef Value)
+open Properties.Order.Common (InputValue RedeemerKind scriptAddr redeemerKindData
+                              inputValueToValue)
 
 structure OrderDatum where
   owner     : ByteString
@@ -64,5 +66,82 @@ def validResolve (ownHash : ByteString)
 /-- Close spec: the signer matches the input datum's owner. -/
 def validClose (input : CloseInput) (signer : ByteString) : Prop :=
   signer = input.datum.owner
+
+/-- `ScriptContext` for a `Resolve`-style transaction, parametric in
+    the spend redeemer `r`. -/
+def resolveCtx
+    (ownHash : ByteString)
+    (input : ResolveInput) (cont : ResolveContinuation)
+    (r : RedeemerKind)
+    (fee : Int) (validRange : Data) (txId : ByteString)
+    (treasuryAmount treasuryDonation : Data) : ScriptContext :=
+  let ownAddr := scriptAddr ownHash
+  let inResolved : TxOut :=
+    ⟨ownAddr, inputValueToValue input.value,
+     .OutputDatum (datumData input.datum), none⟩
+  let contValue :=
+    twoEntryValue cont.lovelace
+                  input.datum.policyId input.datum.assetName cont.assetAmount
+  let contOutput : TxOut :=
+    ⟨cont.address, contValue, .OutputDatum (datumData cont.datum), none⟩
+  { scriptContextTxInfo :=
+      { txInfoInputs := [⟨input.ref, inResolved⟩]
+        txInfoReferenceInputs := []
+        txInfoOutputs := [contOutput]
+        txInfoFee := fee
+        txInfoMint := []
+        txInfoTxCerts := []
+        txInfoWdrl := []
+        txInfoValidRange := validRange
+        txInfoSignatories := []
+        txInfoRedeemers :=
+          [(ScriptPurpose.Spending input.ref, redeemerKindData r)]
+        txInfoData := []
+        txInfoId := txId
+        txInfoVotes := []
+        txInfoProposalProcedures := []
+        txInfoCurrentTreasuryAmount := treasuryAmount
+        txInfoTreasuryDonation := treasuryDonation
+      }
+    scriptContextRedeemer := redeemerKindData r
+    scriptContextScriptInfo :=
+      .SpendingScript input.ref (some (datumData input.datum))
+  }
+
+/-- `ScriptContext` for a `Close`-style transaction, parametric in
+    the spend redeemer `r`. -/
+def closeCtx
+    (ownHash : ByteString)
+    (input : CloseInput) (signer : ByteString)
+    (r : RedeemerKind)
+    (fee : Int) (validRange : Data) (txId : ByteString)
+    (treasuryAmount treasuryDonation : Data) : ScriptContext :=
+  let ownAddr := scriptAddr ownHash
+  let inResolved : TxOut :=
+    ⟨ownAddr, inputValueToValue input.value,
+     .OutputDatum (datumData input.datum), none⟩
+  { scriptContextTxInfo :=
+      { txInfoInputs := [⟨input.ref, inResolved⟩]
+        txInfoReferenceInputs := []
+        txInfoOutputs := []
+        txInfoFee := fee
+        txInfoMint := []
+        txInfoTxCerts := []
+        txInfoWdrl := []
+        txInfoValidRange := validRange
+        txInfoSignatories := [signer]
+        txInfoRedeemers :=
+          [(ScriptPurpose.Spending input.ref, redeemerKindData r)]
+        txInfoData := []
+        txInfoId := txId
+        txInfoVotes := []
+        txInfoProposalProcedures := []
+        txInfoCurrentTreasuryAmount := treasuryAmount
+        txInfoTreasuryDonation := treasuryDonation
+      }
+    scriptContextRedeemer := redeemerKindData r
+    scriptContextScriptInfo :=
+      .SpendingScript input.ref (some (datumData input.datum))
+  }
 
 end Properties.Order.Minimal.Spec

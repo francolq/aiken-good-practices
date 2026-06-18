@@ -15,7 +15,7 @@ open PlutusCore.Data (Data)
 open Properties.Common (validatorAccepts)
 open Properties.Order.Common (RedeemerKind)
 open Properties.Order.Minimal.Spec
-open Properties.Order.Minimal.Completeness (closeCtx orderMinimalValidator resolveCtx)
+open Properties.Order.Minimal.Completeness (orderMinimalValidator)
 
 set_option warn.sorry false
 

@@ -4,7 +4,6 @@ import Blaster
 import Properties.Common
 import Properties.Order.Common
 import Properties.Order.Minimal.Spec
-import Properties.Order.Minimal.Completeness
 import Properties.Order.MinimalSingle.Completeness
 
 /-! Soundness for the minimal-single-input `order` validator. -/
@@ -16,7 +15,6 @@ open PlutusCore.Data (Data)
 open Properties.Common (validatorAccepts)
 open Properties.Order.Common (RedeemerKind)
 open Properties.Order.Minimal.Spec
-open Properties.Order.Minimal.Completeness (closeCtx resolveCtx)
 open Properties.Order.MinimalSingle.Completeness (orderMinimalSingleValidator)
 
 set_option warn.sorry false
