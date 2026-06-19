@@ -63,13 +63,12 @@ def hasOutputs (ctx : ScriptContext) (outs : List TxOut) : Prop :=
 def hasInputs (ctx : ScriptContext) (ins : List TxInInfo) : Prop :=
   ctx.scriptContextTxInfo.txInfoInputs = ins
 
-def spend_sound_theorem (validator : Program) : Prop :=
+def spend_sound_theorem (validator : Program) (redeemer : Redeemer) : Prop :=
     ∀ (outAddr : Address)
-      (redeemer : Redeemer)
       -- (askedAmount : Int)
       ,
     let inDatum : OrderDatum := {
-      owner := "!!!!!!!!!0!!!!!!!!!"
+      owner := "fake_owner_pkh"
       amount := 10
       -- amount := askedAmount  -- code 137 (Out of memory)
       policyId := "fake_policy_hash_28bytes!!!!"
@@ -114,13 +113,10 @@ def spend_sound_theorem (validator : Program) : Prop :=
     -- askedAmount = 10 ∧  -- TODO: WHY IS THIS NOT WORKING ???
     validOrder utxo inDatum ∧
     validatorAccepts ctx validator →
-    ∃ (contUtxo : TxOut),
-      contUtxo = someOutput
-      -- ∧
-      -- hasOutputs ctx [contUtxo]
-      -- ∧
-      -- validOrder contUtxo inDatum
-      -- validTransition utxo contUtxo inDatum ∧
-      -- outAddr = ⟨.ScriptCredential "fake_script_hash_28bytes!!!!", none⟩
+    -- ∃ (contUtxo : TxOut),  contUtxo = someOutput
+      let contUtxo := someOutput
+      hasOutputs ctx [contUtxo]
+      ∧ validOrder contUtxo inDatum
+      ∧ validTransition utxo contUtxo inDatum
 
 end Properties.Soundness

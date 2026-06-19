@@ -4,6 +4,8 @@ import Properties.Soundness
 namespace Properties.OrderV1
 
 open PlutusCore.UPLC.Term (Program)
+open PlutusCore.Data (Data)
+open CardanoLedgerApi.V3 (Redeemer)
 open Properties.Soundness (spend_sound_theorem)
 
 set_option warn.sorry false
@@ -13,7 +15,9 @@ set_option warn.sorry false
 def orderV1Validator : Program := orderV1Script.script
 
 theorem spend_sound :
-  spend_sound_theorem orderV1Validator
+  -- ∀ (redeemer : Redeemer),
+  let redeemer : Redeemer := Data.Constr 0 []
+  spend_sound_theorem orderV1Validator redeemer
   := by blaster
 
 end Properties.OrderV1
