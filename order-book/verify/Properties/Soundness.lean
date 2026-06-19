@@ -21,6 +21,7 @@ structure OrderDatum where
   policyId : ByteString
   assetName : ByteString
 
+-- FIXME: won't work with OrderV2 because of the tag
 def orderData (d : OrderDatum) : Data :=
   Data.Constr 0
   [ Data.B d.owner,
@@ -51,13 +52,10 @@ def validOrder (utxo : TxOut) (datum : OrderDatum) : Prop :=
   utxo.txOutAddress = ⟨.ScriptCredential "fake_script_hash_28bytes!!!!", none⟩ ∧
   utxo.txOutDatum = .OutputDatum (orderData datum)
 
-def validTransition (utxo contUtxo : TxOut) : Prop :=
-  -- true
+def validTransition (utxo contUtxo : TxOut) (datum : OrderDatum) : Prop :=
   contUtxo.txOutAddress = utxo.txOutAddress ∧
   contUtxo.txOutDatum = utxo.txOutDatum ∧
-  let askedCs := ""
-  let askedTn := ""
-  valueOf askedCs askedTn contUtxo.txOutValue ≥ 0
+  valueOf datum.policyId datum.assetName contUtxo.txOutValue ≥ 0
 
 def hasOutputs (ctx : ScriptContext) (outs : List TxOut) : Prop :=
   ctx.scriptContextTxInfo.txInfoOutputs = outs
@@ -67,10 +65,13 @@ def hasInputs (ctx : ScriptContext) (ins : List TxInInfo) : Prop :=
 
 def spend_sound_theorem (validator : Program) : Prop :=
     ∀ (outAddr : Address)
-      (redeemer : Redeemer), -- (inDatum : OrderDatum),
+      (redeemer : Redeemer)
+      -- (askedAmount : Int)
+      ,
     let inDatum : OrderDatum := {
       owner := "!!!!!!!!!0!!!!!!!!!"
       amount := 10
+      -- amount := askedAmount  -- code 137 (Out of memory)
       policyId := "fake_policy_hash_28bytes!!!!"
       assetName := "fake_asset_name"
     }
@@ -86,7 +87,7 @@ def spend_sound_theorem (validator : Program) : Prop :=
       ⟩
     let someOutput : TxOut :=
       ⟨ outAddr,
-        add inDatum.policyId inDatum.assetName inDatum.amount (lovelaceValue 0),
+        add inDatum.policyId inDatum.assetName inDatum.amount (lovelaceValue 0), -- THIS IS CHEATING
         -- outValue,  -- THIS IS NOT CHEAP
         -- .NoOutputDatum,
         .OutputDatum inDatumData, -- THIS IS CHEATING
@@ -97,7 +98,7 @@ def spend_sound_theorem (validator : Program) : Prop :=
       { baseTxInfo with
         txInfoInputs := [⟨utxoRef, utxo⟩]
         txInfoOutputs := [someOutput]
-        -- txInfoRedeemers :=  -- TODO
+        txInfoRedeemers := [(.Spending utxoRef, redeemer)]
       }
     let ctx : ScriptContext :=
       { scriptContextTxInfo := txInfo
@@ -108,12 +109,18 @@ def spend_sound_theorem (validator : Program) : Prop :=
     -- XXX: this is returning false (but is not needed):
     -- validScriptContext ctx ∧
     -- hasInputs ctx [⟨utxoRef, utxo⟩] ∧  -- already covered
+    -- askedAmount > 0 ∧
+    -- askedAmount ≤ 10 ∧  -- code 137 (Out of memory)
+    -- askedAmount = 10 ∧  -- TODO: WHY IS THIS NOT WORKING ???
     validOrder utxo inDatum ∧
     validatorAccepts ctx validator →
     ∃ (contUtxo : TxOut),
-      hasOutputs ctx [contUtxo] ∧
-      validOrder contUtxo inDatum ∧
-      validTransition utxo contUtxo ∧
-      outAddr = ⟨.ScriptCredential "fake_script_hash_28bytes!!!!", none⟩
+      contUtxo = someOutput
+      -- ∧
+      -- hasOutputs ctx [contUtxo]
+      -- ∧
+      -- validOrder contUtxo inDatum
+      -- validTransition utxo contUtxo inDatum ∧
+      -- outAddr = ⟨.ScriptCredential "fake_script_hash_28bytes!!!!", none⟩
 
 end Properties.Soundness
