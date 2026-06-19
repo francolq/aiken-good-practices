@@ -9,22 +9,24 @@ open PlutusCore.ByteString (ByteString)
 open PlutusCore.Data (Data)
 open Properties.Common (validatorAccepts)
 open CardanoLedgerApi.IsData.Class (IsData)
-open CardanoLedgerApi.V3 (Address Datum Redeemer ScriptContext TxInfo TxInInfo TxOut Value validScriptContext lovelaceValue)
+open CardanoLedgerApi.V3 (Address Datum Redeemer ScriptContext TxInfo TxInInfo
+                          TxOut Value OutputDatum validScriptContext
+                          lovelaceValue valueOf singleton add)
 
 set_option warn.sorry false
 
--- structure OrderDatum where
---   owner : ByteString
---   amount : Int
---   policyId : ByteString
---   assetName : ByteString
+structure OrderDatum where
+  owner : ByteString
+  amount : Int
+  policyId : ByteString
+  assetName : ByteString
 
--- def orderDatum (d : OrderDatum) : Data :=
---   Data.Constr 0
---   [ Data.B d.owner,
---     Data.I d.amount,
---     Data.B d.policyId,
---     Data.B d.assetName ]
+def orderData (d : OrderDatum) : Data :=
+  Data.Constr 0
+  [ Data.B d.owner,
+    Data.I d.amount,
+    Data.B d.policyId,
+    Data.B d.assetName ]
 
 def baseTxInfo: TxInfo :=
   { txInfoInputs := []
@@ -45,13 +47,17 @@ def baseTxInfo: TxInfo :=
     txInfoTreasuryDonation := IsData.toData (none : Option Int)
   }
 
-def validOrder (utxo : TxOut) : Prop :=
-  utxo.txOutAddress = ⟨.ScriptCredential "fake_script_hash_28bytes!!!!", none⟩
+def validOrder (utxo : TxOut) (datum : OrderDatum) : Prop :=
+  utxo.txOutAddress = ⟨.ScriptCredential "fake_script_hash_28bytes!!!!", none⟩ ∧
+  utxo.txOutDatum = .OutputDatum (orderData datum)
 
 def validTransition (utxo contUtxo : TxOut) : Prop :=
   -- true
   contUtxo.txOutAddress = utxo.txOutAddress ∧
-  contUtxo.txOutDatum = utxo.txOutDatum
+  contUtxo.txOutDatum = utxo.txOutDatum ∧
+  let askedCs := ""
+  let askedTn := ""
+  valueOf askedCs askedTn contUtxo.txOutValue ≥ 0
 
 def hasOutputs (ctx : ScriptContext) (outs : List TxOut) : Prop :=
   ctx.scriptContextTxInfo.txInfoOutputs = outs
@@ -60,20 +66,31 @@ def hasInputs (ctx : ScriptContext) (ins : List TxInInfo) : Prop :=
   ctx.scriptContextTxInfo.txInfoInputs = ins
 
 def spend_sound_theorem (validator : Program) : Prop :=
-    ∀ (inValue : Value) (outAddr : Address)
-      (redeemer : Redeemer) (inDatum : Datum),
+    ∀ (outAddr : Address)
+      (redeemer : Redeemer), -- (inDatum : OrderDatum),
+    let inDatum : OrderDatum := {
+      owner := "!!!!!!!!!0!!!!!!!!!"
+      amount := 10
+      policyId := "fake_policy_hash_28bytes!!!!"
+      assetName := "fake_asset_name"
+    }
+    let inDatumData := orderData inDatum
     let utxoRef := ⟨"txid_placeholder_32bytes!!!!!!!!", 0⟩
     let utxo : TxOut :=
       ⟨ ⟨.ScriptCredential "fake_script_hash_28bytes!!!!", none⟩,
-        inValue,  -- NICE AND CHEAP
-        .NoOutputDatum,   -- TODO: fix this
+        lovelaceValue 0,  -- TODO: fix this
+        -- inValue,  -- TODO: CAN THIS WORK? (inValue : Value)
+        .OutputDatum inDatumData,
+        -- .OutputDatum inDatum,  -- TODO: no need for this level of generality
         none
       ⟩
     let someOutput : TxOut :=
       ⟨ outAddr,
-        lovelaceValue 0,  -- TODO: fix this
+        add inDatum.policyId inDatum.assetName inDatum.amount (lovelaceValue 0),
         -- outValue,  -- THIS IS NOT CHEAP
-        .NoOutputDatum,
+        -- .NoOutputDatum,
+        .OutputDatum inDatumData, -- THIS IS CHEATING
+        -- outDatum,  -- THIS IS NOT CHEAP (outDatum : OutputDatum)
         none
       ⟩
     let txInfo :=
@@ -86,16 +103,17 @@ def spend_sound_theorem (validator : Program) : Prop :=
       { scriptContextTxInfo := txInfo
         scriptContextRedeemer := redeemer -- FIXME
         -- scriptContextRedeemer := Data.Constr 0 [Data.I 0]
-        scriptContextScriptInfo := .SpendingScript utxoRef (some inDatum)
+        scriptContextScriptInfo := .SpendingScript utxoRef inDatumData
       }
     -- XXX: this is returning false (but is not needed):
     -- validScriptContext ctx ∧
     -- hasInputs ctx [⟨utxoRef, utxo⟩] ∧  -- already covered
-    validOrder utxo ∧
+    validOrder utxo inDatum ∧
     validatorAccepts ctx validator →
     ∃ (contUtxo : TxOut),
       hasOutputs ctx [contUtxo] ∧
-      validOrder someOutput ∧
-      validTransition utxo someOutput
+      validOrder contUtxo inDatum ∧
+      validTransition utxo contUtxo ∧
+      outAddr = ⟨.ScriptCredential "fake_script_hash_28bytes!!!!", none⟩
 
 end Properties.Soundness

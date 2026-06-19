@@ -54,7 +54,7 @@ validator order {
           let in_lovelace = lovelace_of(own_in.output.value)
           and {
             lovelace_of(cont_value) >= in_lovelace,
-            quantity_of(cont_value, policy_id, asset_name) >= amount,
+            // quantity_of(cont_value, policy_id, asset_name) >= amount,
             list.length(flatten(cont_value)) == 2,
           }
         }
@@ -65,7 +65,7 @@ validator order {
         }
 
         and {
-          cont_has_correct_addr?,
+          // cont_has_correct_addr?,
           cont_has_correct_value?,
           cont_has_correct_datum?,
         }
