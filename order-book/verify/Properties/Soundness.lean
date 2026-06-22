@@ -55,7 +55,10 @@ def validOrder (utxo : TxOut) (datum : OrderDatum) : Prop :=
 def validTransition (utxo contUtxo : TxOut) (datum : OrderDatum) : Prop :=
   contUtxo.txOutAddress = utxo.txOutAddress ∧
   contUtxo.txOutDatum = utxo.txOutDatum ∧
-  valueOf datum.policyId datum.assetName contUtxo.txOutValue ≥ 0
+  let askedPolicy := datum.policyId
+  let askedAssetName := datum.assetName
+  valueOf askedPolicy askedAssetName contUtxo.txOutValue ≥
+  valueOf askedPolicy askedAssetName utxo.txOutValue + datum.amount
 
 def hasOutputs (ctx : ScriptContext) (outs : List TxOut) : Prop :=
   ctx.scriptContextTxInfo.txInfoOutputs = outs
@@ -63,13 +66,37 @@ def hasOutputs (ctx : ScriptContext) (outs : List TxOut) : Prop :=
 def hasInputs (ctx : ScriptContext) (ins : List TxInInfo) : Prop :=
   ctx.scriptContextTxInfo.txInfoInputs = ins
 
+def orderValue (lovelace a : Int) : Value :=
+    if a = 0 then
+      [(Data.B "", Data.Map [(Data.B "", Data.I lovelace)])]
+    else
+      [(Data.B "", Data.Map [(Data.B "", Data.I lovelace)]),
+        (Data.B "fake_policyA_hash_28bytes!!!",
+        Data.Map [(Data.B "fake_asset_nameA", Data.I a)])]
+
+def orderValue2 (lovelace a b : Int) : Value :=
+    if a = 0 ∧ b = 0 then
+      [(Data.B "", Data.Map [(Data.B "", Data.I lovelace)])]
+    else if a = 0 then
+      [(Data.B "", Data.Map [(Data.B "", Data.I lovelace)]),
+        (Data.B "fake_policyB_hash_28bytes!!!",
+        Data.Map [(Data.B "fake_asset_nameB", Data.I b)])]
+    else if b = 0 then
+      [(Data.B "", Data.Map [(Data.B "", Data.I lovelace)]),
+        (Data.B "fake_policyA_hash_28bytes!!!",
+        Data.Map [(Data.B "fake_asset_nameA", Data.I a)])]
+    else
+      [(Data.B "", Data.Map [(Data.B "", Data.I lovelace)]),
+        (Data.B "fake_policyA_hash_28bytes!!!",
+        Data.Map [(Data.B "fake_asset_nameA", Data.I a)]),
+        (Data.B "fake_policyB_hash_28bytes!!!",
+        Data.Map [(Data.B "fake_asset_nameB", Data.I b)])]
+
 def spend_sound_theorem (validator : Program) (redeemer : Redeemer) : Prop :=
     ∀ (outAddr : Address)
-      (inLovelace : Int)
-      (aAmount : Int)
+      (inLovelace inA : Int)
+      (outLovelace outA outB : Int)
       ,
-    aAmount = 10 ∧
-    -- let aAmount := 10
     let inDatum : OrderDatum := {
       owner := "fake_owner_pkh"
       amount := 10  -- TODO: generalize!!
@@ -78,19 +105,16 @@ def spend_sound_theorem (validator : Program) (redeemer : Redeemer) : Prop :=
     }
     let inDatumData := orderData inDatum
     let utxoRef := ⟨"txid_placeholder_32bytes!!!!!!!!", 0⟩
-    let inValue := lovelaceValue inLovelace |>
-                   add "fake_policyA_hash_28bytes!!!" "fake_asset_nameA" aAmount
     let utxo : TxOut :=
       ⟨ ⟨.ScriptCredential "fake_script_hash_28bytes!!!!", none⟩,
-        inValue,  -- TODO: fix this
+        orderValue inLovelace inA,  -- TODO: can I make this more general?
         .OutputDatum inDatumData,
         none
       ⟩
     let someOutput : TxOut :=
       ⟨ outAddr,
-        lovelaceValue 0 |>
-        add inDatum.policyId inDatum.assetName inDatum.amount, -- TODO: THIS IS CHEATING
-        .OutputDatum inDatumData,                              -- TODO: THIS IS CHEATING
+        orderValue2 outLovelace outA outB,  -- TODO: can I make this more general?
+        .OutputDatum inDatumData,           -- TODO: THIS IS CHEATING
         none
       ⟩
     let txInfo :=
@@ -109,6 +133,8 @@ def spend_sound_theorem (validator : Program) (redeemer : Redeemer) : Prop :=
     -- validScriptContext ctx ∧
     -- hasInputs ctx [⟨utxoRef, utxo⟩] ∧  -- already covered
     -- constrainedUtxo utxo inValue inDatumData ∧
+    inLovelace > 0 ∧
+    outLovelace > 0 ∧
     validOrder utxo inDatum ∧
     validatorAccepts ctx validator →
     -- ∃ (contUtxo : TxOut),  contUtxo = someOutput
