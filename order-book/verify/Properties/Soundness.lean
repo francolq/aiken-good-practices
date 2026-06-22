@@ -65,32 +65,32 @@ def hasInputs (ctx : ScriptContext) (ins : List TxInInfo) : Prop :=
 
 def spend_sound_theorem (validator : Program) (redeemer : Redeemer) : Prop :=
     ∀ (outAddr : Address)
-      -- (askedAmount : Int)
+      (inLovelace : Int)
+      (aAmount : Int)
       ,
+    aAmount = 10 ∧
+    -- let aAmount := 10
     let inDatum : OrderDatum := {
       owner := "fake_owner_pkh"
-      amount := 10
-      -- amount := askedAmount  -- code 137 (Out of memory)
-      policyId := "fake_policy_hash_28bytes!!!!"
-      assetName := "fake_asset_name"
+      amount := 10  -- TODO: generalize!!
+      policyId := "fake_policyB_hash_28bytes!!!"
+      assetName := "fake_asset_nameB"
     }
     let inDatumData := orderData inDatum
     let utxoRef := ⟨"txid_placeholder_32bytes!!!!!!!!", 0⟩
+    let inValue := lovelaceValue inLovelace |>
+                   add "fake_policyA_hash_28bytes!!!" "fake_asset_nameA" aAmount
     let utxo : TxOut :=
       ⟨ ⟨.ScriptCredential "fake_script_hash_28bytes!!!!", none⟩,
-        lovelaceValue 0,  -- TODO: fix this
-        -- inValue,  -- TODO: CAN THIS WORK? (inValue : Value)
+        inValue,  -- TODO: fix this
         .OutputDatum inDatumData,
-        -- .OutputDatum inDatum,  -- TODO: no need for this level of generality
         none
       ⟩
     let someOutput : TxOut :=
       ⟨ outAddr,
-        add inDatum.policyId inDatum.assetName inDatum.amount (lovelaceValue 0), -- THIS IS CHEATING
-        -- outValue,  -- THIS IS NOT CHEAP
-        -- .NoOutputDatum,
-        .OutputDatum inDatumData, -- THIS IS CHEATING
-        -- outDatum,  -- THIS IS NOT CHEAP (outDatum : OutputDatum)
+        lovelaceValue 0 |>
+        add inDatum.policyId inDatum.assetName inDatum.amount, -- TODO: THIS IS CHEATING
+        .OutputDatum inDatumData,                              -- TODO: THIS IS CHEATING
         none
       ⟩
     let txInfo :=
@@ -98,19 +98,17 @@ def spend_sound_theorem (validator : Program) (redeemer : Redeemer) : Prop :=
         txInfoInputs := [⟨utxoRef, utxo⟩]
         txInfoOutputs := [someOutput]
         txInfoRedeemers := [(.Spending utxoRef, redeemer)]
+        -- txInfoSignatories := [someSignatory]  -- TODO
       }
     let ctx : ScriptContext :=
       { scriptContextTxInfo := txInfo
-        scriptContextRedeemer := redeemer -- FIXME
-        -- scriptContextRedeemer := Data.Constr 0 [Data.I 0]
+        scriptContextRedeemer := redeemer
         scriptContextScriptInfo := .SpendingScript utxoRef inDatumData
       }
     -- XXX: this is returning false (but is not needed):
     -- validScriptContext ctx ∧
     -- hasInputs ctx [⟨utxoRef, utxo⟩] ∧  -- already covered
-    -- askedAmount > 0 ∧
-    -- askedAmount ≤ 10 ∧  -- code 137 (Out of memory)
-    -- askedAmount = 10 ∧  -- TODO: WHY IS THIS NOT WORKING ???
+    -- constrainedUtxo utxo inValue inDatumData ∧
     validOrder utxo inDatum ∧
     validatorAccepts ctx validator →
     -- ∃ (contUtxo : TxOut),  contUtxo = someOutput
