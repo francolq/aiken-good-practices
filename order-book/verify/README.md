@@ -1,28 +1,40 @@
 # Properties
 
-Lean 4 proofs about the compiled UPLC of `validators/order.ak`.
+Lean 4 / Blaster proofs about the compiled UPLC of the `order` validators.
 
-## Layout
+## Architecture
 
-- `Properties/Basic.lean`. Aggregator; importing it pulls every proof.
-- `Properties/Common.lean`. Shared `accepts` / `rejects` predicates over
-  CEK execution states.
-- `Properties/Order/`:
-  - `Spec.lean`. Pure-Lean specification of the intended logic. No UPLC.
-  - `Completeness.lean`. Loads `order_spend.flat`, builds spend contexts,
-    proves `Resolve` / `Close` completeness via `blaster`.
-  - `MintCompleteness.lean`. Same for `order_mint.flat` (`Mint` / `Burn`).
-  - `Soundness.lean`. `accepts ⇒ spec` for all four branches.
-  - `Robustness.lean`. Rejection theorems, including
-    `no_double_satisfaction`.
-- `Scripts/<name>_<purpose>.flat`. UPLC produced by `aiken uplc encode
---hex` (gitignored, regenerate with `make flats`).
+Each property is a single `def <name>_theorem (validator : Program) ... : Prop`
+in `Properties/Spec.lean`, with the `ScriptContext` built **inline**; the
+theorem _is_ the spec. There is one specification; every validator is compared
+against it. The only parameters are `validator` plus the **values** that depend
+on it (the datum and its on-chain encoding, the continuation datum, a redeemer).
+
+- `Properties/Spec.lean`: the single specification module.
+- `Properties/{Complete,Vulnerable,Minimal,MinimalSingle}.lean`: one
+  module per validator, loading its `.flat` and instantiating each property
+  with `:= by blaster`, using `¬` where the validator fails it.
+- `Properties/Common.lean`: `validatorAccepts`.
+- `Properties/Basic.lean`: aggregator (imports the four).
+
+## Results (28 theorems)
+
+| Property                 | Complete | Vulnerable | Minimal | MinimalSingle |
+| ------------------------ | :------: | :--------: | :-----: | :-----------: |
+| resolve soundness        | ✅ sound |  ✅ sound  |  ✗ `¬`  |     ✗ `¬`     |
+| resolve completeness     |    ✅    |     ✅     |   ✅    |      ✅       |
+| close soundness          |    ✅    |     ✅     |   ✅    |      ✅       |
+| close completeness       |    ✅    |     ✅     |   ✅    |      ✅       |
+| no double satisfaction   | ✅ holds |   ✗ `¬`    |  ✗ `¬`  |   ✅ holds    |
+| mint / burn (compl.+snd) |    ✅    |     ✅     |   n/a   |      n/a      |
+
+`✗ `¬``means the positive property is false and the **negation** is proved
+(e.g. the minimal validators let the resolver pay the asset to an arbitrary
+address; the vulnerable/minimal validators admit double satisfaction).
 
 ## Build
 
 ```sh
-lake build                                        # type-check every proof
-lake env lean Properties/Order/Completeness.lean  # one module
+lake build                              # type-check every proof
+lake build Properties.Complete          # one validator module
 ```
-
-The toolchain is pinned in `lean-toolchain`; `elan` fetches it on first build.
