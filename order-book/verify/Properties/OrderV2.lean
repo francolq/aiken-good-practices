@@ -15,9 +15,8 @@ set_option warn.sorry false
 def orderV2Validator : Program := orderV2Script.script
 
 theorem spend_sound :
-  -- ∀ (redeemer : Redeemer),
-  ∀ (idx : Int),
-  let redeemer : Redeemer := Data.Constr 0 [Data.I idx]
+  ∀ (redeemer : Redeemer),
+  -- let redeemer : Redeemer := Data.Constr 0 [Data.I idx]
   spend_sound_theorem orderV2Validator redeemer
   := by blaster
 

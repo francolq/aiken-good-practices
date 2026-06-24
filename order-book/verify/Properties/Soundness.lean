@@ -10,7 +10,7 @@ open PlutusCore.Data (Data)
 open Properties.Common (validatorAccepts)
 open CardanoLedgerApi.IsData.Class (IsData)
 open CardanoLedgerApi.V3 (Address Datum Redeemer ScriptContext TxInfo TxInInfo
-                          TxOut Value OutputDatum validScriptContext
+                          TxOut Value OutputDatum PubKeyHash validScriptContext
                           lovelaceValue valueOf singleton add)
 
 set_option warn.sorry false
@@ -52,7 +52,7 @@ def validOrder (utxo : TxOut) (datum : OrderDatum) : Prop :=
   utxo.txOutAddress = ⟨.ScriptCredential "fake_script_hash_28bytes!!!!", none⟩ ∧
   utxo.txOutDatum = .OutputDatum (orderData datum)
 
-def validTransition (utxo contUtxo : TxOut) (datum : OrderDatum) : Prop :=
+def validResolve (utxo contUtxo : TxOut) (datum : OrderDatum) : Prop :=
   contUtxo.txOutAddress = utxo.txOutAddress ∧
   contUtxo.txOutDatum = utxo.txOutDatum ∧
   let askedPolicy := datum.policyId
@@ -94,8 +94,9 @@ def orderValue2 (lovelace a b : Int) : Value :=
 
 def spend_sound_theorem (validator : Program) (redeemer : Redeemer) : Prop :=
     ∀ (outAddr : Address)
-      (inLovelace inA : Int)
+      (inLovelace inA : Int)  -- input value
       (outLovelace outA outB : Int)
+      (someSignatory : PubKeyHash)
       ,
     let inDatum : OrderDatum := {
       owner := "fake_owner_pkh"
@@ -122,7 +123,7 @@ def spend_sound_theorem (validator : Program) (redeemer : Redeemer) : Prop :=
         txInfoInputs := [⟨utxoRef, utxo⟩]
         txInfoOutputs := [someOutput]
         txInfoRedeemers := [(.Spending utxoRef, redeemer)]
-        -- txInfoSignatories := [someSignatory]  -- TODO
+        txInfoSignatories := [someSignatory]
       }
     let ctx : ScriptContext :=
       { scriptContextTxInfo := txInfo
@@ -141,6 +142,6 @@ def spend_sound_theorem (validator : Program) (redeemer : Redeemer) : Prop :=
       let contUtxo := someOutput
       hasOutputs ctx [contUtxo]
       ∧ validOrder contUtxo inDatum
-      ∧ validTransition utxo contUtxo inDatum
+      ∧ validResolve utxo contUtxo inDatum
 
 end Properties.Soundness
