@@ -138,10 +138,14 @@ def spend_sound_theorem (validator : Program) (redeemer : Redeemer) : Prop :=
     outLovelace > 0 ∧
     validOrder utxo inDatum ∧
     validatorAccepts ctx validator →
-    -- ∃ (contUtxo : TxOut),  contUtxo = someOutput
-      let contUtxo := someOutput
-      hasOutputs ctx [contUtxo]
-      ∧ validOrder contUtxo inDatum
-      ∧ validResolve utxo contUtxo inDatum
+        -- close operation
+        someSignatory = inDatum.owner
+      ∨
+        -- resolve operation
+        -- ∃ (contUtxo : TxOut),  contUtxo = someOutput
+        (let contUtxo := someOutput
+        hasOutputs ctx [contUtxo]
+        ∧ validOrder contUtxo inDatum
+        ∧ validResolve utxo contUtxo inDatum)
 
 end Properties.Soundness
