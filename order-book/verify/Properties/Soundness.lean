@@ -40,14 +40,14 @@ def baseTxInfo: TxInfo :=
     txInfoTreasuryDonation := IsData.toData (none : Option Int)
   }
 
-def validOrder (utxo : TxOut) (datum : OrderDatum) : Prop :=
+-- datum is not checked (it is assumed to be valid)
+def validOrder (utxo : TxOut) : Prop :=
+  -- TODO: staking could be any
   utxo.txOutAddress = ⟨.ScriptCredential "fake_script_hash_28bytes!!!!", none⟩
-  --  ∧
-  -- utxo.txOutDatum = .OutputDatum (orderData datum)
 
 def validResolve (utxo contUtxo : TxOut) (datum : OrderDatum) : Prop :=
   contUtxo.txOutAddress = utxo.txOutAddress ∧
-  contUtxo.txOutDatum = utxo.txOutDatum ∧
+  contUtxo.txOutDatum = utxo.txOutDatum ∧  -- TODO: not necessarily the entire datum must be equal
   let askedPolicy := datum.policyId
   let askedAssetName := datum.assetName
   valueOf askedPolicy askedAssetName contUtxo.txOutValue ≥
@@ -113,7 +113,7 @@ def spend_sound_theorem
     let someOutput : TxOut :=
       ⟨ outAddr,
         orderValue2 outLovelace outA outB,  -- TODO: can I make this more general?
-        .OutputDatum outDatumData,
+        .OutputDatum outDatumData,          -- TODO: malformed datum not considered
         none
       ⟩
     let txInfo :=
@@ -134,7 +134,7 @@ def spend_sound_theorem
     -- constrainedUtxo utxo inValue inDatumData ∧
     inLovelace > 0 ∧
     outLovelace > 0 ∧
-    validOrder utxo inDatum ∧
+    validOrder utxo ∧
     validatorAccepts ctx validator →
         -- close operation
         someSignatory = inDatum.owner
@@ -143,7 +143,7 @@ def spend_sound_theorem
         -- ∃ (contUtxo : TxOut),  contUtxo = someOutput
         (let contUtxo := someOutput
         hasOutputs ctx [contUtxo]
-        ∧ validOrder contUtxo inDatum
+        ∧ validOrder contUtxo
         ∧ validResolve utxo contUtxo inDatum)
 
 end Properties.Soundness
