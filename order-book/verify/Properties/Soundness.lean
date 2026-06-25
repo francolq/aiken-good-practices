@@ -93,6 +93,7 @@ def spend_sound_theorem
       (inLovelace inA : Int)         -- input value
       (outLovelace outA outB : Int)  -- output value
       (someSignatory : PubKeyHash)
+      (outDatum : OrderDatum)
       ,
     let inDatum : OrderDatum := {
       owner := "fake_owner_pkh"
@@ -101,6 +102,7 @@ def spend_sound_theorem
       assetName := "fake_asset_nameB"
     }
     let inDatumData := orderData inDatum
+    let outDatumData := orderData outDatum
     let utxoRef := ⟨"txid_placeholder_32bytes!!!!!!!!", 0⟩
     let utxo : TxOut :=
       ⟨ ⟨.ScriptCredential "fake_script_hash_28bytes!!!!", none⟩,
@@ -111,7 +113,7 @@ def spend_sound_theorem
     let someOutput : TxOut :=
       ⟨ outAddr,
         orderValue2 outLovelace outA outB,  -- TODO: can I make this more general?
-        .OutputDatum inDatumData,           -- TODO: THIS IS CHEATING
+        .OutputDatum outDatumData,
         none
       ⟩
     let txInfo :=

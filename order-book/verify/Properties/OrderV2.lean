@@ -29,10 +29,10 @@ def orderData (tag : Option TxOutRef) (d : OrderDatum) : Data :=
     tagData tag ]
 
 theorem spend_sound :
-  ∀ (redeemer : Redeemer),
-    -- (tag : Option TxOutRef),
+  ∀ (redeemer : Redeemer)
+    (tag : Option TxOutRef),
   -- let redeemer : Redeemer := Data.Constr 0 [Data.I idx]
-  let tag := none
+  -- let tag := none
   spend_sound_theorem orderV2Validator redeemer (orderData tag)
   := by blaster
 
