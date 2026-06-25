@@ -21,14 +21,6 @@ structure OrderDatum where
   policyId : ByteString
   assetName : ByteString
 
--- FIXME: won't work with OrderV2 because of the tag
-def orderData (d : OrderDatum) : Data :=
-  Data.Constr 0
-  [ Data.B d.owner,
-    Data.I d.amount,
-    Data.B d.policyId,
-    Data.B d.assetName ]
-
 def baseTxInfo: TxInfo :=
   { txInfoInputs := []
     txInfoReferenceInputs := []
@@ -49,8 +41,9 @@ def baseTxInfo: TxInfo :=
   }
 
 def validOrder (utxo : TxOut) (datum : OrderDatum) : Prop :=
-  utxo.txOutAddress = ⟨.ScriptCredential "fake_script_hash_28bytes!!!!", none⟩ ∧
-  utxo.txOutDatum = .OutputDatum (orderData datum)
+  utxo.txOutAddress = ⟨.ScriptCredential "fake_script_hash_28bytes!!!!", none⟩
+  --  ∧
+  -- utxo.txOutDatum = .OutputDatum (orderData datum)
 
 def validResolve (utxo contUtxo : TxOut) (datum : OrderDatum) : Prop :=
   contUtxo.txOutAddress = utxo.txOutAddress ∧
@@ -92,10 +85,13 @@ def orderValue2 (lovelace a b : Int) : Value :=
         (Data.B "fake_policyB_hash_28bytes!!!",
         Data.Map [(Data.B "fake_asset_nameB", Data.I b)])]
 
-def spend_sound_theorem (validator : Program) (redeemer : Redeemer) : Prop :=
+def spend_sound_theorem
+  (validator : Program)
+  (redeemer : Redeemer)
+  (orderData : OrderDatum -> Data) : Prop :=
     ∀ (outAddr : Address)
-      (inLovelace inA : Int)  -- input value
-      (outLovelace outA outB : Int)
+      (inLovelace inA : Int)         -- input value
+      (outLovelace outA outB : Int)  -- output value
       (someSignatory : PubKeyHash)
       ,
     let inDatum : OrderDatum := {
