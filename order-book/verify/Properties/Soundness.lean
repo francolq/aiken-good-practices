@@ -9,9 +9,9 @@ open PlutusCore.ByteString (ByteString)
 open PlutusCore.Data (Data)
 open Properties.Common (validatorAccepts)
 open CardanoLedgerApi.IsData.Class (IsData)
-open CardanoLedgerApi.V3 (Address Datum Redeemer ScriptContext TxInfo TxInInfo
-                          TxOut Value OutputDatum PubKeyHash validScriptContext
-                          lovelaceValue valueOf singleton add)
+open CardanoLedgerApi.V3 (Address Datum Redeemer ScriptContext StakingCredential
+                          TxInfo TxInInfo TxOut Value OutputDatum PubKeyHash
+                          validScriptContext lovelaceValue valueOf singleton add)
 
 set_option warn.sorry false
 
@@ -43,7 +43,7 @@ def baseTxInfo: TxInfo :=
 -- datum is not checked (it is assumed to be valid)
 def validOrder (utxo : TxOut) : Prop :=
   -- TODO: staking could be any
-  utxo.txOutAddress = ⟨.ScriptCredential "fake_script_hash_28bytes!!!!", none⟩
+  utxo.txOutAddress.addressCredential = .ScriptCredential "fake_script_hash_28bytes!!!!"
 
 def validResolve (utxo contUtxo : TxOut) (datum : OrderDatum) : Prop :=
   contUtxo.txOutAddress = utxo.txOutAddress ∧
@@ -89,7 +89,9 @@ def spend_sound_theorem
   (validator : Program)
   (redeemer : Redeemer)
   (orderData : OrderDatum -> Data) : Prop :=
-    ∀ (outAddr : Address)
+    ∀
+      (inStaking : Option StakingCredential)
+      (outAddr : Address)
       (inLovelace inA : Int)         -- input value
       (outLovelace outA outB : Int)  -- output value
       (someSignatory : PubKeyHash)
@@ -105,7 +107,8 @@ def spend_sound_theorem
     let outDatumData := orderData outDatum
     let utxoRef := ⟨"txid_placeholder_32bytes!!!!!!!!", 0⟩
     let utxo : TxOut :=
-      ⟨ ⟨.ScriptCredential "fake_script_hash_28bytes!!!!", none⟩,
+      ⟨
+        ⟨.ScriptCredential "fake_script_hash_28bytes!!!!", inStaking ⟩,
         orderValue inLovelace inA,  -- TODO: can I make this more general?
         .OutputDatum inDatumData,
         none
