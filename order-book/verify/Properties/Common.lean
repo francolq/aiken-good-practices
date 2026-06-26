@@ -9,7 +9,7 @@ open PlutusCore.UPLC.Term (Const Program)
 open PlutusCore.UPLC.CekMachine (cekExecuteProgram)
 
 def validatorAccepts (ctx : ScriptContext) (validator : Program) : Prop :=
-  cekExecuteProgram validator [toTerm ctx] 5000000
+  cekExecuteProgram validator [toTerm ctx] 5000
     = .Halt (.VCon Const.Unit)
 
 end Properties.Common
