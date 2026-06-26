@@ -33,7 +33,7 @@ def baseTxInfo: TxInfo :=
     txInfoSignatories := []
     txInfoRedeemers := []
     txInfoData := []
-    txInfoId := "txid_placeholder_32bytes!!!!!!!!"
+    txInfoId := "fake_txid_32bytes!!!!!!!!!!!!!!!"
     txInfoVotes := []
     txInfoProposalProcedures := []
     txInfoCurrentTreasuryAmount := IsData.toData (none : Option Int)
@@ -90,7 +90,7 @@ def spend_sound_theorem
   (redeemer : Redeemer)
   (orderData : OrderDatum -> Data) : Prop :=
     ∀
-      (inStaking : Option StakingCredential)
+      (useStaking : Bool)
       (outAddr : Address)
       (inLovelace inA : Int)         -- input value
       (outLovelace outA outB : Int)  -- output value
@@ -104,8 +104,10 @@ def spend_sound_theorem
       assetName := "fake_asset_nameB"
     }
     let inDatumData := orderData inDatum
-    let outDatumData := orderData outDatum
-    let utxoRef := ⟨"txid_placeholder_32bytes!!!!!!!!", 0⟩
+    let inStaking := if useStaking then
+                        some (.StakingHash (.PubKeyCredential "fake_staking_hash_28bytes!!!"))
+                     else
+                        none
     let utxo : TxOut :=
       ⟨
         ⟨.ScriptCredential "fake_script_hash_28bytes!!!!", inStaking ⟩,
@@ -116,9 +118,10 @@ def spend_sound_theorem
     let someOutput : TxOut :=
       ⟨ outAddr,
         orderValue2 outLovelace outA outB,  -- TODO: can I make this more general?
-        .OutputDatum outDatumData,          -- TODO: malformed datum not considered
+        .OutputDatum (orderData outDatum),  -- TODO: malformed datum not considered
         none
       ⟩
+    let utxoRef := ⟨"fake_input_txid_32bytes!!!!!!!!!", 0⟩
     let txInfo :=
       { baseTxInfo with
         txInfoInputs := [⟨utxoRef, utxo⟩]
