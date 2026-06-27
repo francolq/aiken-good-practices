@@ -95,10 +95,11 @@ def spend_sound_theorem
       (outLovelace outA outB : Int)  -- output value
       (someSignatory : PubKeyHash)
       (outDatum : OrderDatum)
+      (inAmount : Int)
       ,
     let inDatum : OrderDatum := {
       owner := "fake_owner_pkh"
-      amount := 10  -- TODO: generalize!!
+      amount := inAmount
       policyId := "fake_policyB_hash_28bytes!!!"
       assetName := "fake_asset_nameB"
     }
@@ -140,7 +141,8 @@ def spend_sound_theorem
     inLovelace > 0 ∧
     outLovelace > 0 ∧
     validOrder utxo ∧
-    validator ctx →
+    validator ctx
+    →
         -- close operation
         someSignatory = inDatum.owner
       ∨
