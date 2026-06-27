@@ -41,9 +41,19 @@ def orderV1Validator2 (ctx : ScriptContext) : Prop :=
   validatorAccepts2 ctx appliedOrderV1Script.prop
 
 theorem spend_sound :
-  ∀ (redeemer : Redeemer),
-  -- let redeemer : Redeemer := Data.Constr 0 []
-  spend_sound_theorem orderV1Validator redeemer orderData
+  ∀ (redeemer : Redeemer)
+    (inAmount : Int)
+    (outDatum : OrderDatum)
+  ,
+  let inDatum : OrderDatum := {
+    owner := "fake_owner_pkh"
+    amount := inAmount
+    policyId := "fake_policyB_hash_28bytes!!!"
+    assetName := "fake_asset_nameB"
+  }
+  let inOrderData := orderData inDatum
+  let outOrderData := orderData outDatum  -- TODO: malformed datum not considered
+  spend_sound_theorem orderV1Validator redeemer inDatum inOrderData outOrderData
   -- spend_sound_theorem orderV1Validator2 redeemer orderData
   := by blaster
 

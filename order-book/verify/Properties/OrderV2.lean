@@ -37,10 +37,19 @@ def orderV2Validator2 (ctx : ScriptContext) : Prop :=
 
 theorem spend_sound :
   ∀ (redeemer : Redeemer)
-    (tag : Option TxOutRef),
-  -- let redeemer : Redeemer := Data.Constr 0 [Data.I idx]
-  -- let tag := none
-  spend_sound_theorem orderV2Validator redeemer (orderData tag)
+    (inAmount : Int)
+    (outDatum : OrderDatum)
+    (inTag outTag : Option TxOutRef)  -- TODO: can this be optimized?
+  ,
+  let inDatum : OrderDatum := {
+    owner := "fake_owner_pkh"
+    amount := inAmount
+    policyId := "fake_policyB_hash_28bytes!!!"
+    assetName := "fake_asset_nameB"
+  }
+  let inOrderData := orderData inTag inDatum
+  let outOrderData := orderData outTag outDatum  -- TODO: malformed datum not considered
+  spend_sound_theorem orderV2Validator redeemer inDatum inOrderData outOrderData
   -- spend_sound_theorem orderV2Validator2 redeemer (orderData tag)
   := by blaster
 

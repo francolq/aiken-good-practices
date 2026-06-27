@@ -20,6 +20,27 @@ structure OrderDatum where
   policyId : ByteString
   assetName : ByteString
 
+def orderDatum (orderData : Data) : OrderDatum :=
+  match orderData with
+  | Data.Constr 0
+      ( Data.B owner ::
+        Data.I amount ::
+        Data.B policyId ::
+        Data.B assetName ::
+        _
+      ) =>
+      { owner := owner
+        amount := amount
+        policyId := policyId
+        assetName := assetName
+      }
+  | _ =>
+      { owner := default
+        amount := default
+        policyId := default
+        assetName := default
+      }
+
 def baseTxInfo: TxInfo :=
   { txInfoInputs := []
     txInfoReferenceInputs := []
@@ -44,13 +65,27 @@ def validOrder (utxo : TxOut) : Prop :=
   -- TODO: staking could be any
   utxo.txOutAddress.addressCredential = .ScriptCredential "fake_script_hash_28bytes!!!!"
 
-def validResolve (utxo contUtxo : TxOut) (datum : OrderDatum) : Prop :=
+/--
+  Checks correct execution of a resolve operation.
+  For optimization, input datum is assumed to be already parsed in `inDatum`.
+  Checks:
+  - address preserved
+  - datum is inline, first four fields are as in inDatum.
+    Rest of datum can be anything.
+  - in value, asked asset is added in required amount.
+    Rest of value can be anything.
+  - ref script not checked
+--/
+def validResolve (utxo contUtxo : TxOut) (inDatum : OrderDatum) : Prop :=
   contUtxo.txOutAddress = utxo.txOutAddress ∧
-  contUtxo.txOutDatum = utxo.txOutDatum ∧  -- TODO: not necessarily the entire datum must be equal
-  let askedPolicy := datum.policyId
-  let askedAssetName := datum.assetName
-  valueOf askedPolicy askedAssetName contUtxo.txOutValue ≥
-  valueOf askedPolicy askedAssetName utxo.txOutValue + datum.amount
+  if let .OutputDatum outDatum := utxo.txOutDatum then
+    inDatum = orderDatum outDatum ∧
+    let askedPolicy := inDatum.policyId
+    let askedAssetName := inDatum.assetName
+    valueOf askedPolicy askedAssetName contUtxo.txOutValue ≥
+    valueOf askedPolicy askedAssetName utxo.txOutValue + inDatum.amount
+  else
+    false
 
 def hasOutputs (ctx : ScriptContext) (outs : List TxOut) : Prop :=
   ctx.scriptContextTxInfo.txInfoOutputs = outs
@@ -87,38 +122,32 @@ def orderValue2 (lovelace a b : Int) : Value :=
 def spend_sound_theorem
   (validator : ScriptContext → Prop)
   (redeemer : Redeemer)
-  (orderData : OrderDatum -> Data) : Prop :=
+  (inOrderDatum : OrderDatum)
+  (inOrderData : Data)
+  (outOrderData : Data)
+  : Prop :=
     ∀
       (useStaking : Bool)
       (outAddr : Address)
       (inLovelace inA : Int)         -- input value
       (outLovelace outA outB : Int)  -- output value
       (someSignatory : PubKeyHash)
-      (outDatum : OrderDatum)
-      (inAmount : Int)
+      -- (someRange : Data)
       ,
-    let inDatum : OrderDatum := {
-      owner := "fake_owner_pkh"
-      amount := inAmount
-      policyId := "fake_policyB_hash_28bytes!!!"
-      assetName := "fake_asset_nameB"
-    }
-    let inDatumData := orderData inDatum
     let inStaking := if useStaking then
                         some (.StakingHash (.PubKeyCredential "fake_staking_hash_28bytes!!!"))
                      else
                         none
     let utxo : TxOut :=
-      ⟨
-        ⟨.ScriptCredential "fake_script_hash_28bytes!!!!", inStaking ⟩,
+      ⟨ ⟨.ScriptCredential "fake_script_hash_28bytes!!!!", inStaking ⟩,
         orderValue inLovelace inA,  -- TODO: can I make this more general?
-        .OutputDatum inDatumData,
+        .OutputDatum inOrderData,
         none
       ⟩
     let someOutput : TxOut :=
       ⟨ outAddr,
         orderValue2 outLovelace outA outB,  -- TODO: can I make this more general?
-        .OutputDatum (orderData outDatum),  -- TODO: malformed datum not considered
+        .OutputDatum outOrderData,
         none
       ⟩
     let utxoRef := ⟨"fake_input_txid_32bytes!!!!!!!!!", 0⟩
@@ -128,29 +157,31 @@ def spend_sound_theorem
         txInfoOutputs := [someOutput]
         txInfoRedeemers := [(.Spending utxoRef, redeemer)]
         txInfoSignatories := [someSignatory]
+        -- txInfoValidRange := someRange
       }
     let ctx : ScriptContext :=
       { scriptContextTxInfo := txInfo
         scriptContextRedeemer := redeemer
-        scriptContextScriptInfo := .SpendingScript utxoRef inDatumData
+        scriptContextScriptInfo := .SpendingScript utxoRef inOrderData
       }
     -- XXX: this is returning false (but is not needed):
     -- validScriptContext ctx ∧
     -- hasInputs ctx [⟨utxoRef, utxo⟩] ∧  -- already covered
-    -- constrainedUtxo utxo inValue inDatumData ∧
+    -- constrainedUtxo utxo inValue inOrderData ∧
     inLovelace > 0 ∧
     outLovelace > 0 ∧
     validOrder utxo ∧
     validator ctx
     →
         -- close operation
-        someSignatory = inDatum.owner
+        someSignatory = inOrderDatum.owner
       ∨
         -- resolve operation
         -- ∃ (contUtxo : TxOut),  contUtxo = someOutput
         (let contUtxo := someOutput
         hasOutputs ctx [contUtxo]
         ∧ validOrder contUtxo
-        ∧ validResolve utxo contUtxo inDatum)
+        ∧ validResolve utxo contUtxo inOrderDatum
+        )
 
 end Properties.Soundness
