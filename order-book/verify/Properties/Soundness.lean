@@ -7,7 +7,6 @@ namespace Properties.Soundness
 open PlutusCore.UPLC.Term (Program)
 open PlutusCore.ByteString (ByteString)
 open PlutusCore.Data (Data)
-open Properties.Common (validatorAccepts)
 open CardanoLedgerApi.IsData.Class (IsData)
 open CardanoLedgerApi.V3 (Address Datum Redeemer ScriptContext StakingCredential
                           TxInfo TxInInfo TxOut Value OutputDatum PubKeyHash
@@ -86,7 +85,7 @@ def orderValue2 (lovelace a b : Int) : Value :=
         Data.Map [(Data.B "fake_asset_nameB", Data.I b)])]
 
 def spend_sound_theorem
-  (validator : Program)
+  (validator : ScriptContext → Prop)
   (redeemer : Redeemer)
   (orderData : OrderDatum -> Data) : Prop :=
     ∀
@@ -141,7 +140,7 @@ def spend_sound_theorem
     inLovelace > 0 ∧
     outLovelace > 0 ∧
     validOrder utxo ∧
-    validatorAccepts ctx validator →
+    validator ctx →
         -- close operation
         someSignatory = inDatum.owner
       ∨
