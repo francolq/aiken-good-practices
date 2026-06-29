@@ -170,6 +170,9 @@ def spend_sound_theorem
     -- constrainedUtxo utxo inValue inOrderData ∧
     inLovelace > 0 ∧
     outLovelace > 0 ∧
+    inA ≥ 0 ∧
+    outA ≥ 0 ∧
+    outB ≥ 0 ∧
     validOrder utxo ∧
     validator ctx
     →
