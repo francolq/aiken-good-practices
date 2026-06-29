@@ -16,7 +16,7 @@ set_option warn.sorry false
 
 #prep_uplc appliedOrderV1Script orderV1Script spendingInputs 1
 
-#print orderV1Script
+-- #print orderV1Script
 
 -- steps = 500 we get something empty: fun ctx => PlutusCore.UPLC.CekMachine.State.Error,
 -- steps = 600 we get something longer: ~70 lines
@@ -25,7 +25,7 @@ set_option warn.sorry false
 -- steps = 1600 still not finding the counterexample (+100 seconds)
 -- steps = 1700 still not finding the counterexample (+270 seconds)
 -- steps = 1800 still not finding the counterexample (+700 seconds)
-#print appliedOrderV1Script
+-- #print appliedOrderV1Script
 
 def orderData (d : OrderDatum) : Data :=
   Data.Constr 0

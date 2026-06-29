@@ -39,7 +39,8 @@ theorem spend_sound :
   ∀ (redeemer : Redeemer)
     (inAmount : Int)
     (outDatum : OrderDatum)
-    (inTag outTag : Option TxOutRef)  -- TODO: can this be optimized?
+    (outTag : Option TxOutRef)  -- TODO: can this be optimized?
+    (inTagNone : Bool)
   ,
   let inDatum : OrderDatum := {
     owner := "fake_owner_pkh"
@@ -47,6 +48,10 @@ theorem spend_sound :
     policyId := "fake_policyB_hash_28bytes!!!"
     assetName := "fake_asset_nameB"
   }
+  let inTag := if inTagNone then
+                  none
+               else
+                  some ⟨"fake_tag_txid_32bytes!!!!!!!!!!!", 0⟩
   let inOrderData := orderData inTag inDatum
   let outOrderData := orderData outTag outDatum  -- TODO: malformed datum not considered
   spend_sound_theorem orderV2Validator redeemer inDatum inOrderData outOrderData

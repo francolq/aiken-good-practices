@@ -63,7 +63,8 @@ def baseTxInfo: TxInfo :=
 -- datum is not checked (it is assumed to be valid)
 def validOrder (utxo : TxOut) : Prop :=
   -- TODO: staking could be any
-  utxo.txOutAddress.addressCredential = .ScriptCredential "fake_script_hash_28bytes!!!!"
+  utxo.txOutAddress.addressCredential = .ScriptCredential "fake_script_hash_28bytes!!!!" ∧
+  utxo.txOutReferenceScript = none
 
 /--
   Checks correct execution of a resolve operation.
