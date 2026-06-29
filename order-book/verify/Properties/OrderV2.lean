@@ -39,8 +39,7 @@ theorem spend_sound :
   ∀ (redeemer : Redeemer)
     (inAmount : Int)
     (outDatum : OrderDatum)
-    (outTag : Option TxOutRef)  -- TODO: can this be optimized?
-    (inTagNone : Bool)
+    (outTag : Option TxOutRef)
   ,
   let inDatum : OrderDatum := {
     owner := "fake_owner_pkh"
@@ -48,6 +47,7 @@ theorem spend_sound :
     policyId := "fake_policyB_hash_28bytes!!!"
     assetName := "fake_asset_nameB"
   }
+  let inTagNone := false  -- XXX: quantifying this is much slower
   let inTag := if inTagNone then
                   none
                else
