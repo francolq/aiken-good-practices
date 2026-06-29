@@ -133,7 +133,7 @@ def spend_sound_theorem
       (inLovelace inA : Int)         -- input value
       (outLovelace outA outB : Int)  -- output value
       (someSignatory : PubKeyHash)
-      -- (someRange : Data)
+      (someRange : Data)
       ,
     let inStaking := if useStaking then
                         some (.StakingHash (.PubKeyCredential "fake_staking_hash_28bytes!!!"))
@@ -158,7 +158,7 @@ def spend_sound_theorem
         txInfoOutputs := [someOutput]
         txInfoRedeemers := [(.Spending utxoRef, redeemer)]
         txInfoSignatories := [someSignatory]
-        -- txInfoValidRange := someRange
+        txInfoValidRange := someRange
       }
     let ctx : ScriptContext :=
       { scriptContextTxInfo := txInfo
