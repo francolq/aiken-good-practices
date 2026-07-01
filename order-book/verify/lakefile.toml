@@ -17,8 +17,8 @@ rev = "main"
 
 [[require]]
 name = "Blaster"
-git = "https://github.com/input-output-hk/Lean-blaster"
-rev = "main"
+git = "https://github.com/filabs-dev/Lean-blaster"
+rev = "beta-lambda-cache-optimization-dite-fix"
 
 [[lean_lib]]
 name = "Properties"
