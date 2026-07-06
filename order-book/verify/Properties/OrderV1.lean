@@ -1,5 +1,6 @@
 import Blaster
 import Properties.Soundness
+import Properties.IdealSoundness
 
 namespace Properties.OrderV1
 
@@ -9,6 +10,7 @@ open PlutusCore.ByteString (ByteString)
 open CardanoLedgerApi.V3 (ScriptContext Redeemer spendingInputs)
 open Properties.Common (validatorAccepts validatorAccepts2)
 open Properties.Soundness (OrderDatum spend_sound_theorem)
+open Properties.IdealSoundness (IdealOrderDatum ideal_spend_soundness_theorem)
 
 set_option warn.sorry false
 
@@ -27,18 +29,22 @@ set_option warn.sorry false
 -- steps = 1800 still not finding the counterexample (+700 seconds)
 -- #print appliedOrderV1Script
 
+def orderV1Validator (ctx : ScriptContext) : Prop :=
+  validatorAccepts ctx orderV1Script.script
+
+def orderV1Validator2 (ctx : ScriptContext) : Prop :=
+  validatorAccepts2 ctx appliedOrderV1Script.prop
+
+theorem ideal_spend_sound :
+  ideal_spend_soundness_theorem orderV1Validator
+  := by sorry
+
 def orderData (d : OrderDatum) : Data :=
   Data.Constr 0
   [ Data.B d.owner,
     Data.I d.amount,
     Data.B d.policyId,
     Data.B d.assetName ]
-
-def orderV1Validator (ctx : ScriptContext) : Prop :=
-  validatorAccepts ctx orderV1Script.script
-
-def orderV1Validator2 (ctx : ScriptContext) : Prop :=
-  validatorAccepts2 ctx appliedOrderV1Script.prop
 
 theorem spend_sound :
   ∀ (redeemer : Redeemer)
