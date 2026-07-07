@@ -75,21 +75,27 @@ def validResolve (utxo contUtxo : TxOut) : Prop :=
   -- parse input datum
   if let .OutputDatum inDatum := utxo.txOutDatum then
     if let some inDatum := orderDatum inDatum then
+      if let .OutputDatum outDatum := contUtxo.txOutDatum then
+        if let some outDatum := orderDatum outDatum then
 
-      -- check address
-      contUtxo.txOutAddress = utxo.txOutAddress ∧
+          -- check address
+          contUtxo.txOutAddress = utxo.txOutAddress
 
-      -- check datum (TODO: not abstract enough)
-      contUtxo.txOutDatum = utxo.txOutDatum ∧
+          -- check datum (only relevant fields)
+          ∧ outDatum = inDatum
 
-      -- check value
-      let askedPolicy := inDatum.policyId
-      let askedAssetName := inDatum.assetName
-      valueOf askedPolicy askedAssetName contUtxo.txOutValue ≥
-      valueOf askedPolicy askedAssetName utxo.txOutValue + inDatum.amount ∧
+          -- check value
+          ∧ let askedPolicy := inDatum.policyId
+            let askedAssetName := inDatum.assetName
+            valueOf askedPolicy askedAssetName contUtxo.txOutValue ≥
+            valueOf askedPolicy askedAssetName utxo.txOutValue + inDatum.amount
 
-      -- check ref script
-      contUtxo.txOutReferenceScript = none
+          -- check ref script
+          ∧ contUtxo.txOutReferenceScript = none
+        else
+          false
+      else
+        false
     else
       -- false precondition: input datum is not well-formed
       false
